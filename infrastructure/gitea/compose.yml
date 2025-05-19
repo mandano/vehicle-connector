@@ -1,0 +1,32 @@
+services:
+  rabbitmq:
+    image: docker.io/library/rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  c_p_action_requests:
+    build:
+      context: ../../connector/processors/actionRequests/fromUserApiToQueue
+      dockerfile: Containerfile
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ../../connector/processors/actionRequests/fromUserApiToQueue:/usr/src/app/connector/processors/actionRequests/fromUserApiToQueue
+      - ../../connector/common:/usr/src/app/connector/common
+      - ../../modules:/usr/src/app/modules
+    environment:
+      INTERNAL: true
+      RABBITMQ_HOST: rabbitmq
+      FILES_PATH_PRIVATE: /tmp
+      FILES_PATH_SHARED: /tmp/vc-shared
+
+
+
+
+

@@ -1,0 +1,97 @@
+name: Run integration tests on affected packages
+run-name: ${{ gitea.actor }}
+on: [push]
+
+jobs:
+  Run-Integration-Tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.RUNWORKFLOWS }}
+
+      - name: Fetch commits
+        run: |
+          git fetch --deepen=1000
+
+      - name: Detect affected packages
+        run: ./infrastructure/scripts/workflows/detect-changes.sh
+
+      - name: Show changed packages
+        if: env.SKIP != 'true'
+        run: |
+          echo "Changed: ${{ env.CHANGED }}"
+
+      - name: Setup Node.js
+        if: env.SKIP != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Up RabbitMq
+        if: env.SKIP != 'true'
+        run: |
+          cd connector/common
+          
+          npm run test:integration:rabbitmq:docker:up
+          
+          cd -
+
+      - name: Link workflow network to RabbitMQ network
+        run: |
+          docker network connect connector_common_integration_tests_default $HOSTNAME
+
+      - name: Install waitForRabbitMq dependencies (directly checking rabbit mq)
+        if: env.SKIP != 'true'
+        run: |
+          cd infrastructure/scripts/rabbitMq
+          npm install --save-dev
+
+          cd -
+
+      - name: Run tests
+        if: env.SKIP != 'true'
+        timeout-minutes: 5
+        run: |
+          source "infrastructure/scripts/workflows/package-deps.sh"
+          
+          echo "Changed packages: $CHANGED"
+          
+          for pkg in $CHANGED; do
+            for path in ${packageDeps[$pkg]}; do  
+              cd "$path"
+              echo "Cd $path - ${packageDeps[$pkg]}";
+              npm install --save-dev
+            
+              deps=${packageDeps[$pkg]}
+              count=$(wc -w <<< "$deps")
+              echo "length of $count"
+          
+              if [[ ("$path" == *"common"* || "$path" == *"modules"*) && $count -gt 1 ]]; then
+                cd -
+                echo "Skipping tests in $path";
+                continue
+              fi
+          
+              echo "Running tests in $path"
+                        
+              if npm run | grep -q "pipeline:test:integration:without-docker"; then
+                npm run pipeline:test:integration:without-docker;
+              fi
+          
+              cd -
+            done
+          done
+        env:
+          CHANGED: ${{ env.CHANGED }}
+
+      - name: Down RabbitMq
+        if: always()
+        run: |
+          cd connector/common
+
+          npm run test:integration:rabbitmq:docker:down
+
+          cd -
+

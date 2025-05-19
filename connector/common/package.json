@@ -1,0 +1,27 @@
+{
+  "name": "common",
+  "version": "0.1.0",
+  "scripts": {
+    "local:test:integration:without-docker": "npm run local:wait-for-rabbitmq && NODE_DEBUG=test node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --test \"**/*.test.integration.ts\"",
+    "local:wait-for-rabbitmq": "node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' ../../infrastructure/scripts/rabbitMq/waitForRabbitMq.ts",
+    "test:unit:node-runner": "NODE_DEBUG=test node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --test \"**/*.test.ts\"",
+    "test:integration:run": "npm run test:integration:rabbitmq:docker:up && npm run wait-for-rabbitmq && RABBITMQ_HOST=rabbitmq RABBITMQ_PORT=5677 NODE_DEBUG=test node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --test \"**/*.test.integration.ts\" && npm run test:integration:rabbitmq:docker:down",
+    "test:integration:rabbitmq:docker:up": "RABBITMQ_PORT=5677 RABBITMQ_MANAGEMENT_PORT=15677 docker compose -f ../../infrastructure/podman/testing/compose.yml -p connector_common_integration_tests up -d rabbitmq",
+    "test:integration:rabbitmq:docker:down": "docker compose -f ../../infrastructure/podman/testing/compose.yml -p connector_common_integration_tests down",
+    "pipeline:test:integration:without-docker": "npm run pipeline:wait-for-rabbitmq && RABBITMQ_HOST=connector_common_integration_tests-rabbitmq-1 NODE_DEBUG=test node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --test \"**/*.test.integration.ts\"",
+    "pipeline:wait-for-rabbitmq": "RABBITMQ_HOST=connector_common_integration_tests-rabbitmq-1 RABBITMQ_PORT=5672 node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' ../../infrastructure/scripts/rabbitMq/waitForRabbitMq.ts"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^9.7.0",
+    "amqplib": "^0.10.4"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2"
+  },
+  "engines": {
+    "node": "^22"
+  },
+  "engineStrict": true,
+  "type": "module",
+  "license": "BSD-3-Clause"
+}

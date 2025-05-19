@@ -1,0 +1,7 @@
+FROM node:22
+
+WORKDIR /usr/src/app/connector/userApi
+
+RUN mkdir -p /tmp/vc-shared
+
+CMD ["npm", "run", "runDev"]

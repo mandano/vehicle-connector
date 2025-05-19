@@ -1,0 +1,7 @@
+FROM node:22
+
+WORKDIR /usr/src/app/connector/processors/actionRequests/fromUserApiToQueue
+
+RUN mkdir -p /tmp/vc-shared
+
+CMD ["npm", "run", "runDev"]

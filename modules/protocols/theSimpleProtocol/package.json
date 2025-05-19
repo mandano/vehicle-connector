@@ -1,0 +1,26 @@
+{
+  "name": "the-simple-protocol",
+  "version": "0.1.0",
+  "description": "Protocol to show case functionality of the connector",
+  "type": "module",
+  "devDependencies": {
+    "@faker-js/faker": "^9.7.0",
+    "@types/node": "^22.10.2",
+    "@types/supertest": "^6.0.3",
+    "supertest": "^7.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  },
+  "scripts": {
+    "pipeline:test:acceptance:run": "npm run user-api-wait-for-rabbitmq && NODE_DEBUG=test node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --test \"**/*.test.acceptance.ts\"",
+    "local:test:acceptance:run": "npm run local:test:acceptance:podman:up && USER_API_PORT=3456 npm run user-api-wait-for-rabbitmq && TCP_PORT=1236 USER_API_PORT=3456 RABBITMQ_PORT=5676 NODE_DEBUG=test node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --test \"**/*.test.acceptance.ts\"; npm run local:test:acceptance:podman:down",
+    "local:test:acceptance:podman:up": "BASE_RELATIVE_PATH=../../../ RABBITMQ_PORT=5676 RABBITMQ_MANAGEMENT_PORT=15676 INTERNAL=true TCP_PORT=1236 USER_API_PORT=3456 podman-compose -f ../../../infrastructure/podman/testing/compose.yml -p the_simple_protocol_acceptance_tests up -d",
+    "local:test:acceptance:podman:down": "BASE_RELATIVE_PATH=../../../ podman-compose -f ../../../infrastructure/podman/testing/compose.yml -p the_simple_protocol_acceptance_tests down --volumes",
+    "test:unit:node-runner": "NODE_DEBUG=test node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --test \"**/*.test.ts\"",
+    "user-api-wait-for-rabbitmq": "USER_API_RABBIT_MQ_TIMEOUT=60000 node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' ../../../infrastructure/scripts/userApi/waitForRabbitMq.ts"
+  },
+  "engines": {
+    "node": "^22"
+  },
+  "license": "BSD-3-Clause"
+}

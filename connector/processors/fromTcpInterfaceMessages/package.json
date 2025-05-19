@@ -1,0 +1,24 @@
+{
+  "name": "process-from-tcp-interface-messages",
+  "version": "0.1.0",
+  "scripts": {
+    "runDev": "node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' src/index.ts",
+    "test:unit:node-runner": "node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --test \"**/*.test.ts\""
+  },
+  "devDependencies": {
+    "ts-mockito": "^2.6.1",
+    "ts-node": "^10.9.2",
+    "@faker-js/faker": "^9.7.0"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.4",
+    "dotenv": "^16.4.5",
+    "typescript": "^5.6.2"
+  },
+  "engines": {
+    "node": "^22"
+  },
+  "engineStrict": true,
+  "type": "module",
+  "license": "BSD-3-Clause"
+}

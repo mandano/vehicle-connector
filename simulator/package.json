@@ -1,0 +1,22 @@
+{
+  "name": "simulator",
+  "version": "0.1.0",
+  "description": "Simulates vehicle fleet",
+  "type": "module",
+  "dependencies": {
+    "@faker-js/faker": "^9.2.0",
+    "@turf/turf": "^7.1.0",
+    "@types/node": "^22.10.2",
+    "dotenv": "^16.5.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  },
+  "scripts": {
+    "test:unit:node-runner": "NODE_DEBUG=test node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --test \"**/*.test.ts\"",
+    "dev": "node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' src/index.ts"
+  },
+  "engines": {
+    "node": "^22"
+  },
+  "license": "BSD-3-Clause"
+}

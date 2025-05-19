@@ -1,0 +1,70 @@
+name: Run unit and file system integration tests on affected packages
+run-name: ${{ gitea.actor }}
+on: [push]
+
+jobs:
+  Run-Unit-Tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.RUNWORKFLOWS }}
+
+      - name: Fetch commits
+        run: |
+          git fetch --deepen=1000
+
+      - name: Detect affected packages
+        run: ./infrastructure/scripts/workflows/detect-changes.sh
+
+      - name: Show changed packages
+        if: env.SKIP != 'true'
+        run: |
+          echo "Changed: ${{ env.CHANGED }}"
+
+      - name: Setup Node.js
+        if: env.SKIP != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run tests
+        if: env.SKIP != 'true'
+        run: |
+          source "infrastructure/scripts/workflows/package-deps.sh"
+
+          echo "Changed packages: $CHANGED"
+          
+          for pkg in $CHANGED; do
+            for path in ${packageDeps[$pkg]}; do  
+              cd "$path"
+              echo "Cd $path - ${packageDeps[$pkg]}";
+              npm install --save-dev
+            
+              deps=${packageDeps[$pkg]}
+              count=$(wc -w <<< "$deps")
+              echo "length of $count"
+          
+              if [[ ("$path" == *"common"* || "$path" == *"modules"*) && $count -gt 1 ]]; then
+                cd -
+                echo "Skipping tests in $path";
+                continue
+              fi
+          
+              echo "Running tests in $path"
+                        
+              if npm run | grep -q "test:unit:node-runner"; then
+                npm run test:unit:node-runner;
+              fi
+          
+              if npm run | grep -q "test:unit:jest" ; then
+                npm run test:unit:jest;
+              fi
+              
+              cd -
+            done
+          done
+        env:
+          CHANGED: ${{ env.CHANGED }}
+

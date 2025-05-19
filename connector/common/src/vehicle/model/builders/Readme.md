@@ -1,0 +1,3 @@
+- new data coming will also converted into Unknown model, see connector/common/src/vehicle/model/builders/CreateByMessageLineContext.ts
+- if vehicle not exist, model as unknown will be saved if automatic saving enabled
+- otherwise update happens, 

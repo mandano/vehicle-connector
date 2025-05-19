@@ -1,0 +1,20 @@
+{
+  "name": "protocols-common",
+  "version": "0.1.0",
+  "description": "Protocols common folder",
+  "type": "module",
+  "license": "BSD-3-Clause",
+    "engines": {
+        "node": "^22"
+    },
+  "scripts": {
+    "test:unit:node-runner": "NODE_DEBUG=test node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --test \"**/*.test.ts\""
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^9.7.0",
+    "@types/node": "^22.10.2",
+    "supertest": "^7.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  }
+}

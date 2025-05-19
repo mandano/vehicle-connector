@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="processFromTcpInterfaceMessages" type="js.build_tools.npm">
+    <package-json value="$PROJECT_DIR$/connector/processors/fromTcpInterfaceMessages/package.json" />
+    <command value="run" />
+    <scripts>
+      <script value="runDev" />
+    </scripts>
+    <node-interpreter value="project" />
+    <envs />
+    <method v="2" />
+  </configuration>
+</component>

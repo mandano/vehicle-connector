@@ -1,0 +1,122 @@
+name: Run integration tests on affected packages
+run-name: ${{ gitea.actor }}
+on: [push]
+
+jobs:
+  Run-Acceptance-Tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set skip variable
+        if: env.SKIP != 'true'
+        run: echo "SKIP=true" >> $GITHUB_ENV
+
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.RUNWORKFLOWS }}
+
+      - name: PWD and Ls
+        if: env.SKIP != 'true'
+        run: |
+          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+          echo "pwd=$(pwd)"
+          ls -al
+          ls ./connector/processors/actionRequests/fromUserApiToQueue
+
+      - name: Fetch commits
+        if: env.SKIP != 'true'
+        run: |
+          git fetch --deepen=1000
+
+      - name: Detect affected packages
+        if: env.SKIP != 'true'
+        run: ./infrastructure/scripts/workflows/detect-changes.sh
+
+      - name: Show changed packages
+        if: env.SKIP != 'true'
+        run: |
+          echo "Changed: ${{ env.CHANGED }}"
+
+      - name: Setup Node.js
+        if: env.SKIP != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Show checkout directory
+        if: env.SKIP != 'true'
+        run: |
+          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+          echo "pwd=$(pwd)"
+          ls -al
+
+      - name: Check up working directory
+        if: env.SKIP != 'true'
+        run: | 
+          echo "PWD=$(pwd)" >> $GITHUB_ENV
+          echo "${PWD}/connector/tcpInterface"
+          ls -al "${PWD}/connector/tcpInterface"
+          
+          echo "Debug directory contents:"
+          find ${PWD} -type d -name "fromTcpInterfaceMessages" -exec ls -la {} \;
+          find ${PWD} -type f -name "package.json" | grep "fromTcpInterfaceMessages"
+          
+          # Check Docker volume permissions
+          docker info
+          
+          # Ensure Docker has access to the directories
+          chmod -R 755 ${PWD}/connector
+
+      - name: Up Services
+        if: env.SKIP != 'true'
+        timeout-minutes: 2
+        run: |
+          export BASE_RELATIVE_PATH="${PWD}/"
+          INTERNAL=true docker compose -f infrastructure/gitea/compose.yml -p run_acceptance_tests up --build
+
+      - name: Link workflow network to services network
+        run: |
+          docker network connect run_acceptance_tests_default $HOSTNAME
+
+      - name: Run tests
+        if: env.SKIP != 'true'
+        timeout-minutes: 5
+        run: |
+          source "infrastructure/scripts/workflows/package-deps.sh"
+
+          echo "Changed packages: $CHANGED"
+          
+          for pkg in $CHANGED; do
+            for path in ${packageDeps[$pkg]}; do  
+              cd "$path"
+              echo "Cd $path - ${packageDeps[$pkg]}";
+              npm install --save-dev
+            
+              deps=${packageDeps[$pkg]}
+              count=$(wc -w <<< "$deps")
+              echo "length of $count"
+          
+              if [[ ("$path" == *"common"* || "$path" == *"modules"*) && $count -gt 1 ]]; then
+                cd -
+                echo "Skipping tests in $path";
+                continue
+              fi
+          
+              echo "Running tests in $path"
+                        
+              if npm run | grep -q "pipeline:test:acceptance:run"; then
+                USER_API_HOST=run_acceptance_tests-user_api-1 npm run pipeline:test:acceptance:run;
+              fi
+          
+              cd -
+            done
+          done
+        env:
+          CHANGED: ${{ env.CHANGED }}
+
+      - name: Down RabbitMq
+        if: always()
+        run: |
+          docker compose -f infrastructure/gitea/compose.yml -p run_acceptance_tests down --volumes
+
+

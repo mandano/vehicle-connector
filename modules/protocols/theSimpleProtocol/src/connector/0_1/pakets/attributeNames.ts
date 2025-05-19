@@ -1,0 +1,9 @@
+export const LATITUDE = 'latitude';
+export const LONGITUDE = 'longitude';
+export const TIME = 'time';
+export const PROTOCOL = 'protocol';
+export const IMEI = 'imei';
+export const PROTOCOL_VERSION = 'protocolVersion';
+export const PAKET_TYPE = 'paketType';
+export const TRACKING_ID = 'trackingId';
+export const LOCK = 'lock';

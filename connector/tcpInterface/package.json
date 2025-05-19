@@ -1,0 +1,23 @@
+{
+  "name": "tcpinterface",
+  "version": "0.1.0",
+  "scripts": {
+    "runDev": "node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' src/index.ts",
+    "test:unit:node-runner": "NODE_DEBUG=test node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --test \"**/*.test.ts\""
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.4",
+    "dotenv": "^16.4.5",
+    "net": "^1.0.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": "^22"
+  },
+  "engineStrict": true,
+  "type": "module",
+  "license": "BSD-3-Clause"
+}

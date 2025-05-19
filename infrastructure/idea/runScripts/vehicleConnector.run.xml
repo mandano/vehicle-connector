@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="vehicleConnector" type="CompoundRunConfigurationType">
+    <toRun name="Viewer" type="js.build_tools.npm" />
+    <toRun name="processActionRequests" type="js.build_tools.npm" />
+    <toRun name="processFromTcpInterfaceMessages" type="js.build_tools.npm" />
+    <toRun name="tcpInterface" type="js.build_tools.npm" />
+    <toRun name="userApi" type="js.build_tools.npm" />
+    <method v="2" />
+  </configuration>
+</component>

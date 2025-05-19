@@ -1,0 +1,13 @@
+{
+  "name": "user-api",
+  "version": "0.1.0",
+  "devDependencies": {
+    "ts-node": "^10.9.2"
+  },
+  "engines": {
+    "node": "^22"
+  },
+  "engineStrict": true,
+  "type": "module",
+  "license": "BSD-3-Clause"
+}
