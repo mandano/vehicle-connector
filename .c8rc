@@ -1,0 +1,5 @@
+{
+  "reporter": ["text", "text-summary"],
+  "include": ["**/src/**/*.ts"],
+  "all": true
+}
