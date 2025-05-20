@@ -1,4 +1,5 @@
-/tmp
+tmp/*
+!tmp/.keep
 /out-tsc
 
 node_modules
