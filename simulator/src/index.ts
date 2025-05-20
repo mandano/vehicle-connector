@@ -61,7 +61,9 @@ async function run() {
 
   const context = await loadContext();
 
-  const amountOfVehicles = 9;
+  const fleetUsageInPercent = 50;
+
+  const amountOfVehicles = Math.floor((imeis.length * fleetUsageInPercent) / 100);
 
   const randomImeis = getRandomElements(imeis, amountOfVehicles);
   const protocolConfigs = config.protocolConfigs as ProtocolConfigs;
