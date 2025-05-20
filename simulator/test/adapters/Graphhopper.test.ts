@@ -1,5 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 
 import dotenv from "dotenv";
 
@@ -7,7 +8,14 @@ import { Graphhopper } from "../../src/adapters/Graphhopper.ts";
 import { Coordinate } from "../../src/vehicles/position/Coordinate.ts";
 
 describe("Graphhopper", () => {
-  dotenv.config({ path: "test/.env" });
+  const envPaths = ["test/.env", "simulator/test/.env"];
+  if (existsSync(envPaths[0])) {
+    dotenv.config({ path: envPaths[0] });
+  } else if (existsSync(envPaths[1])) {
+    dotenv.config({ path: envPaths[1] });
+  } else {
+    throw new Error(`env paths invalid`);
+  }
 
   const apiKey = process.env.GRAPHHOPPER_API_KEY;
   if (apiKey === undefined) {
