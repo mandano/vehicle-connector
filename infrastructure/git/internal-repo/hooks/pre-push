@@ -1,6 +1,6 @@
 #!/bin/bash
 
-protected_branches=("master" "internal-to-public")
+protected_branches=("main" "internal-to-public")
 
 while read local_ref local_sha remote_ref remote_sha; do
   branch_name=$(echo "$remote_ref" | sed 's|refs/heads/||')

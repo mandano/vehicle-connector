@@ -7,10 +7,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set skip variable
-        if: env.SKIP != 'true'
         run: echo "SKIP=true" >> $GITHUB_ENV
 
       - name: Check out repository code
+        if: env.SKIP != 'true'
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.RUNWORKFLOWS }}
@@ -42,6 +42,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+
+      - name: Install dependencies
+        if: env.SKIP != 'true'
+        run: |
+          npm run setupDependencies
 
       - name: Show checkout directory
         if: env.SKIP != 'true'
@@ -75,6 +80,7 @@ jobs:
           INTERNAL=true docker compose -f infrastructure/gitea/compose.yml -p run_acceptance_tests up --build
 
       - name: Link workflow network to services network
+        if: env.SKIP != 'true'
         run: |
           docker network connect run_acceptance_tests_default $HOSTNAME
 

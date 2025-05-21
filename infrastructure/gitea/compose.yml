@@ -12,21 +12,17 @@ services:
 
   c_p_action_requests:
     build:
-      context: ../../connector/processors/actionRequests/fromUserApiToQueue
+      context: ${GITHUB_WORKSPACE}/connector/processors/actionRequests/fromUserApiToQueue
       dockerfile: Containerfile
     depends_on:
       - rabbitmq
     volumes:
-      - ../../connector/processors/actionRequests/fromUserApiToQueue:/usr/src/app/connector/processors/actionRequests/fromUserApiToQueue
-      - ../../connector/common:/usr/src/app/connector/common
-      - ../../modules:/usr/src/app/modules
+      - ${GITHUB_WORKSPACE}/connector/processors/actionRequests/fromUserApiToQueue:/usr/src/app/connector/processors/actionRequests/fromUserApiToQueue:ro
+      - ${GITHUB_WORKSPACE}/connector/common:/usr/src/app/connector/common:ro
+      - ${GITHUB_WORKSPACE}/modules:/usr/src/app/modules:ro
     environment:
       INTERNAL: true
       RABBITMQ_HOST: rabbitmq
       FILES_PATH_PRIVATE: /tmp
       FILES_PATH_SHARED: /tmp/vc-shared
-
-
-
-
 
