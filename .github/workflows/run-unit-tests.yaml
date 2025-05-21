@@ -15,7 +15,7 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_WORKFLOWS_TOKEN }}
+          token: ${{ secrets.WORKFLOWS_TOKEN }}
 
       - name: Fetch commits
         run: |
