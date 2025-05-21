@@ -1,0 +1,92 @@
+name: Run integration tests on affected packages
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  Run-Integration-Tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_WORKFLOWS }}
+
+      - name: Fetch commits
+        run: |
+          git fetch --deepen=1000
+
+      - name: Detect affected packages
+        run: ./infrastructure/scripts/workflows/detect-changes.sh
+
+      - name: Setup Node.js
+        if: env.SKIP != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Cache node modules
+        if: env.SKIP != 'true'
+        uses: actions/cache@v4
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Setup dependencies
+        if: env.SKIP != 'true'
+        run: npm run setupDependencies
+
+      - name: Up RabbitMq
+        if: env.SKIP != 'true'
+        run: |
+          set -euo pipefail
+          cd connector/common
+          npm run test:integration:rabbitmq:docker:up
+          cd -
+          
+          echo "rabbitUp=true" >> $GITHUB_ENV
+
+      - name: Link workflow network to RabbitMQ network
+        if: env.SKIP != 'true'
+        run: |
+          set -euo pipefail
+          docker network connect connector_common_integration_tests_default $HOSTNAME
+
+      - name: Install waitForRabbitMq dependencies (directly checking rabbit mq)
+        if: env.SKIP != 'true'
+        run: |
+          cd infrastructure/scripts/rabbitMq
+          npm install --save-dev
+          cd -
+
+      - name: Run tests
+        if: env.SKIP != 'true'
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          source "infrastructure/scripts/workflows/package-deps.sh"
+          echo "Changed packages: $CHANGED"
+          for path in $CHANGED; do
+            cd "$path"
+            echo "Running tests in $path"
+            if npm run | grep -q "pipeline:test:integration:without-docker"; then
+                npm run pipeline:test:integration:without-docker;
+              fi
+            cd -
+          done
+        env:
+          CHANGED: ${{ env.CHANGED }}
+
+      - name: Down RabbitMq
+        if: env.rabbitUp == 'true'
+        run: |
+          cd connector/common
+          npm run test:integration:rabbitmq:docker:down
+          cd -
+
