@@ -7,13 +7,18 @@ set -e
 
 source "$(dirname "$0")/package-deps.sh"
 
-if [ "$(git rev-parse --abbrev-ref HEAD)" = "master" ]; then
-  echo "On master – comparing with previous commit"
+if [ "$(git rev-parse --abbrev-ref HEAD)" = "main" ]; then
+  echo "On main – comparing with previous commit"
   BASE="HEAD~1"
 else
-  echo "On branch other than master – comparing with origin/master"
-  BASE=$(git merge-base HEAD origin/master)
+  echo "On branch other than main – comparing with main"
+  BASE=$(git merge-base HEAD main)
 fi
+
+BASE_COMMIT_NAME=$(git log -1 --pretty=format:"%s" "$BASE")
+echo "Base commit: $BASE_COMMIT_NAME"
+HEAD_COMMIT_NAME=$(git log -1 --pretty=format:"%s")
+echo "Head commit: $HEAD_COMMIT_NAME"
 
 CHANGED=()
 for pkg in "${!packageDeps[@]}"; do

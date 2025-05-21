@@ -29,6 +29,11 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Install dependencies
+        if: env.SKIP != 'true'
+        run: |
+          npm run setupDependencies
+
       - name: Run tests
         if: env.SKIP != 'true'
         run: |
@@ -40,7 +45,6 @@ jobs:
             for path in ${packageDeps[$pkg]}; do  
               cd "$path"
               echo "Cd $path - ${packageDeps[$pkg]}";
-              npm install --save-dev
             
               deps=${packageDeps[$pkg]}
               count=$(wc -w <<< "$deps")
