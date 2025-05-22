@@ -69,8 +69,8 @@ jobs:
           for path in $CHANGED; do
             cd "$path"
             echo "Running tests in $path"
-            if npm run | grep -q "pipeline:github:test:integration"; then
-                npm run pipeline:github:test:integration;
+            if npm run | grep -q "local:test:integration:without-docker"; then
+                npm run local:test:integration:without-docker;
               fi
             cd -
           done
