@@ -59,34 +59,7 @@ jobs:
         if: env.SKIP != 'true'
         timeout-minutes: 5
         run: |
-          source "infrastructure/scripts/workflows/package-deps.sh"
-          
-          echo "Changed packages: $CHANGED"
-          
-          for pkg in $CHANGED; do
-            for path in ${packageDeps[$pkg]}; do  
-              cd "$path"
-              echo "Cd $path - ${packageDeps[$pkg]}";
-            
-              deps=${packageDeps[$pkg]}
-              count=$(wc -w <<< "$deps")
-              echo "length of $count"
-          
-              if [[ ("$path" == *"common"* || "$path" == *"modules"*) && $count -gt 1 ]]; then
-                cd -
-                echo "Skipping tests in $path";
-                continue
-              fi
-          
-              echo "Running tests in $path"
-                        
-              if npm run | grep -q "pipeline:test:integration:without-docker"; then
-                npm run pipeline:test:integration:without-docker;
-              fi
-          
-              cd -
-            done
-          done
+          ./infrastructure/scripts/workflows/trigger-tests.sh pipeline:test:integration:without-docker
         env:
           CHANGED: ${{ env.CHANGED }}
 

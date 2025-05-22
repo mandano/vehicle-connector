@@ -92,30 +92,15 @@ jobs:
 
           echo "Changed packages: $CHANGED"
           
-          for pkg in $CHANGED; do
-            for path in ${packageDeps[$pkg]}; do  
-              cd "$path"
-              echo "Cd $path - ${packageDeps[$pkg]}";
-              npm install --save-dev
-            
-              deps=${packageDeps[$pkg]}
-              count=$(wc -w <<< "$deps")
-              echo "length of $count"
+          for path in $CHANGED; do  
+            cd "$path"          
+            echo "Running tests in $path"
           
-              if [[ ("$path" == *"common"* || "$path" == *"modules"*) && $count -gt 1 ]]; then
-                cd -
-                echo "Skipping tests in $path";
-                continue
-              fi
-          
-              echo "Running tests in $path"
-                        
-              if npm run | grep -q "pipeline:test:acceptance:run"; then
+            if npm run | grep -q "pipeline:test:acceptance:run"; then
                 USER_API_HOST=run_acceptance_tests-user_api-1 npm run pipeline:test:acceptance:run;
               fi
           
-              cd -
-            done
+            cd -
           done
         env:
           CHANGED: ${{ env.CHANGED }}

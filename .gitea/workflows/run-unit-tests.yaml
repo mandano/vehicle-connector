@@ -37,38 +37,7 @@ jobs:
       - name: Run tests
         if: env.SKIP != 'true'
         run: |
-          source "infrastructure/scripts/workflows/package-deps.sh"
-
-          echo "Changed packages: $CHANGED"
-          
-          for pkg in $CHANGED; do
-            for path in ${packageDeps[$pkg]}; do  
-              cd "$path"
-              echo "Cd $path - ${packageDeps[$pkg]}";
-            
-              deps=${packageDeps[$pkg]}
-              count=$(wc -w <<< "$deps")
-              echo "length of $count"
-          
-              if [[ ("$path" == *"common"* || "$path" == *"modules"*) && $count -gt 1 ]]; then
-                cd -
-                echo "Skipping tests in $path";
-                continue
-              fi
-          
-              echo "Running tests in $path"
-                        
-              if npm run | grep -q "test:unit:node-runner"; then
-                npm run test:unit:node-runner;
-              fi
-          
-              if npm run | grep -q "test:unit:jest" ; then
-                npm run test:unit:jest;
-              fi
-              
-              cd -
-            done
-          done
+          ./infrastructure/scripts/workflows/trigger-tests.sh test:unit:node-runner
         env:
           CHANGED: ${{ env.CHANGED }}
 
