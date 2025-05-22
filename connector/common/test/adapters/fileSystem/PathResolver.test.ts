@@ -20,6 +20,11 @@ describe('PathResolver', () => {
   it("should resolve a relative path to an absolute path", () => {
     const pathResolver = new PathResolver();
 
+    const tmpDir = "../../../tmp";
+    if (!fs.existsSync(tmpDir)) {
+      fs.mkdirSync(tmpDir);
+    }
+
     fs.writeFileSync("/tmp/testfile.txt", "Dies ist ein Testinhalt.", "utf8");
 
     const relativeFilePath = "../../../tmp/testfile.txt";
