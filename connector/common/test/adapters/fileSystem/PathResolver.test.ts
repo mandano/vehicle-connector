@@ -1,13 +1,15 @@
 import fs from "fs";
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import path, { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import PathResolver from "../../../src/adapters/fileSystem/PathResolver.ts";
 
 /**
  * Use node's built-in test runner as using esm "import.meta.url" tested code
  */
-describe('PathResolver', () => {
+describe("PathResolver", () => {
   it("should return the same path if the input is an absolute path", () => {
     const pathResolver = new PathResolver();
 
@@ -20,21 +22,26 @@ describe('PathResolver', () => {
   it("should resolve a relative path to an absolute path", () => {
     const pathResolver = new PathResolver();
 
-    const tmpDir = "../../../tmp";
-    if (!fs.existsSync(tmpDir)) {
-      fs.mkdirSync(tmpDir);
+    const dirPath = path.join(
+      dirname(fileURLToPath(import.meta.url)),
+      "../../../../../tmp",
+    );
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath);
     }
 
-    fs.writeFileSync("/tmp/testfile.txt", "Dies ist ein Testinhalt.", "utf8");
+    const testFilePath = path.join(dirPath, "testFile.txt");
 
-    const relativeFilePath = "../../../tmp/testfile.txt";
+    fs.writeFileSync(testFilePath, "Test content.", "utf8");
+
+    const relativeFilePath = "tmp/testFile.txt";
     const calculatedFilePath = pathResolver.run(relativeFilePath);
 
     const found = fs.existsSync(calculatedFilePath);
-    fs.rmSync(calculatedFilePath);
+    fs.rmSync(testFilePath);
 
     if (found === false) {
-      assert.fail("File not found")
+      assert.fail("File not found");
     }
     assert.ok(true);
   });

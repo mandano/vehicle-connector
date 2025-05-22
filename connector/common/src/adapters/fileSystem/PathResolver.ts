@@ -1,6 +1,9 @@
 import path, { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
+/**
+ * Provide absolute path or path relative root directory of project.
+ */
 export default class PathResolver {
   public run(filePath: string) {
     if (path.isAbsolute(filePath)) {
