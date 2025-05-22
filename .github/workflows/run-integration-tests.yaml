@@ -47,16 +47,10 @@ jobs:
         run: |
           set -euo pipefail
           cd connector/common
-          npm run test:integration:rabbitmq:docker:up
+          npm run pipeline:github:rabbitmq:docker:up
           cd -
           
           echo "rabbitUp=true" >> $GITHUB_ENV
-
-      - name: Link workflow network to RabbitMQ network
-        if: env.SKIP != 'true'
-        run: |
-          set -euo pipefail
-          docker network connect connector_common_integration_tests_default $HOSTNAME
 
       - name: Install waitForRabbitMq dependencies (directly checking rabbit mq)
         if: env.SKIP != 'true'
@@ -75,8 +69,8 @@ jobs:
           for path in $CHANGED; do
             cd "$path"
             echo "Running tests in $path"
-            if npm run | grep -q "pipeline:test:integration:without-docker"; then
-                npm run pipeline:test:integration:without-docker;
+            if npm run | grep -q "pipeline:github:test:integration"; then
+                npm run pipeline:github:test:integration;
               fi
             cd -
           done
@@ -87,6 +81,6 @@ jobs:
         if: env.rabbitUp == 'true'
         run: |
           cd connector/common
-          npm run test:integration:rabbitmq:docker:down
+          npm run pipeline:github:rabbitmq:docker:down
           cd -
 
