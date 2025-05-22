@@ -11,8 +11,8 @@ if [ "$(git rev-parse --abbrev-ref HEAD)" = "main" ]; then
   echo "On main – comparing with previous commit"
   BASE="HEAD~1"
 else
-  echo "On branch other than main – comparing with main"
-  BASE=$(git merge-base HEAD main)
+  echo "On branch other than main – comparing with origin/main"
+  BASE=$(git merge-base HEAD origin/main)
 fi
 
 BASE_COMMIT_NAME=$(git log -1 --pretty=format:"%s" "$BASE")

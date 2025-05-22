@@ -79,6 +79,8 @@ jobs:
           export BASE_RELATIVE_PATH="${PWD}/"
           INTERNAL=true docker compose -f infrastructure/gitea/compose.yml -p run_acceptance_tests up --build
 
+          echo "servicesUp=true" >> $GITHUB_ENV
+
       - name: Link workflow network to services network
         if: env.SKIP != 'true'
         run: |
@@ -106,7 +108,7 @@ jobs:
           CHANGED: ${{ env.CHANGED }}
 
       - name: Down RabbitMq
-        if: always()
+        if: env.servicesUp == 'true'
         run: |
           docker compose -f infrastructure/gitea/compose.yml -p run_acceptance_tests down --volumes
 
