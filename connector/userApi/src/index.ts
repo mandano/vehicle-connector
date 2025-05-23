@@ -22,7 +22,6 @@ import { SendActionRequest } from "../../common/src/vehicle/model/actions/SendAc
 import { WorkerQueue } from "../../common/src/adapters/queue/rabbitMq/WorkerQueue.ts";
 import { Unknown as JsonVehicleToVehicleUnknown } from "../../common/src/vehicle/json/jsonVehicleToVehicle/models/Unknown.ts";
 import { LockableScooter as VehicleToJsonVehicleLockableScooter } from "../../common/src/vehicle/json/vehicleToJsonVehicle/models/LockableScooter.ts";
-import { ExchangeQueue } from "../../common/src/adapters/queue/rabbitMq/ExchangeQueue.ts";
 import { Exchange } from "../../common/src/adapters/queue/rabbitMq/Exchange.ts";
 import { ActionStateFromJson } from "../../common/src/vehicle/model/actions/json/ActionStateFromJson.ts";
 import { Channel } from "../../common/src/adapters/queue/rabbitMq/Channel.ts";
@@ -50,6 +49,7 @@ dotenv.config();
 const filesPathShared = pathResolver.run(
   process.env.FILES_PATH_SHARED || "tmp",
 );
+const applicationName = "userApi";
 
 const logger = new Logger(LogLevels.DEBUG_LEVEL);
 
@@ -96,6 +96,7 @@ const exchange = new Exchange(rabbitMqChannel, "action_responses", logger);
 
 const handleLockResponseV2 = new HandleLockResponseV2(
   new ActionStateFromJson(logger),
+  logger,
 );
 
 const server = new HttpExpressServer(
@@ -108,27 +109,19 @@ const server = new HttpExpressServer(
     new GetByImei(vehicleRepository),
     new Lock(
       vehicleRepository,
-      new ExchangeQueue(
-        rabbitMqChannel,
-        handleLockResponseV2,
-        handleLockResponseV2,
-        exchange,
-        "userApi",
-        logger,
-        true,
-      ),
+      rabbitMqChannel,
+      handleLockResponseV2,
+      exchange,
+      applicationName,
+      logger,
     ),
     new Unlock(
       vehicleRepository,
-      new ExchangeQueue(
-        rabbitMqChannel,
-        handleLockResponseV2,
-        handleLockResponseV2,
-        exchange,
-        "userApi",
-        logger,
-        true,
-      ),
+      rabbitMqChannel,
+      handleLockResponseV2,
+      exchange,
+      applicationName,
+      logger,
     ),
     new UpdateModelName(vehicleRepository),
     new GetMap(vehicleRepository),

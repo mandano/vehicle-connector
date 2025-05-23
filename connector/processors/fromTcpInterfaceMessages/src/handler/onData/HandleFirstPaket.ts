@@ -66,10 +66,23 @@ export class HandleFirstPaket implements HandleFirstPaketInterface {
       vehicleModelByPaket?.lock?.state !== undefined &&
       vehicleId !== undefined
     ) {
-      await this._forwardLockAttribute.run(
+      const forwarded = await this._forwardLockAttribute.run(
         vehicleModelByPaket.lock.state.state,
         vehicleId,
       );
+
+      if (forwarded !== true) {
+        this._logger.error(
+          `Forward lock attribute failed`,
+          HandleFirstPaket.name,
+        );
+        return;
+      } else {
+        this._logger.info(
+          `Forward lock attribute succeeded`,
+          HandleFirstPaket.name,
+        );
+      }
     }
 
     await this.acknowledge(socketId, messageLineContext);

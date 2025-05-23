@@ -103,10 +103,23 @@ export class HandleNotFirstPaket implements HandleNotFirstPaketInterface {
     }
 
     if (vehicleModelByPaket?.lock?.state !== undefined) {
-      await this._forwardLockAttribute.run(
+      const forwarded = await this._forwardLockAttribute.run(
         vehicleModelByPaket.lock.state.state,
         vehicleStored.id,
       );
+
+      if (forwarded !== true) {
+        this._logger.error(
+          `Forward lock attribute failed`,
+          HandleNotFirstPaket.name,
+        );
+        return;
+      } else {
+        this._logger.info(
+          `Forward lock attribute succeeded`,
+          HandleNotFirstPaket.name,
+        );
+      }
     }
 
     await this.acknowledge(socketId, messageLineContext);

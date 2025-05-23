@@ -8,6 +8,7 @@ export class ProcessActionRequests {
   }
 
   public run(): void {
+    // TODO: catch consumption errors
     this._toTcpInterfaceMessage
       .consume()
       .then(() => {});

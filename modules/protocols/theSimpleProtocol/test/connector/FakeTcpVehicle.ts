@@ -58,8 +58,8 @@ export class FakeTcpVehicle {
       this._logger.info("Connection closed");
       this._connected = false;
     });
-    this._socket.on(Socket.EVENT_ON_DATA, (data: Buffer) => {
-      this.onData(data);
+    this._socket.on(Socket.EVENT_ON_DATA, async (data: Buffer) => {
+      await this.onData(data);
     });
   }
 
@@ -74,7 +74,7 @@ export class FakeTcpVehicle {
     });
   }
 
-  private onData(data: Buffer): boolean {
+  private async onData(data: Buffer): Promise<boolean> {
     this._logger.info("new data received");
 
     if (data.length === 1 && data[0] === LINE_FEED) {
@@ -100,9 +100,12 @@ export class FakeTcpVehicle {
       return false;
     }
 
-    const responseMessageLineWithDateTime = responseMessageLine.replace(/\{(.*?)\}/g, (_, dateString) => {
+    const responseMessageLineWithDateTime = responseMessageLine.replace(/\{(.*?)\}/g, () => {
       return new Date().toISOString();
     });
+
+    // TODO: check necessity of stmt, removing breaks acceptance test, because response prior to consumption?
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     return this.sendMessage(responseMessageLineWithDateTime);
   }

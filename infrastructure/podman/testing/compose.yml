@@ -20,9 +20,7 @@ services:
     depends_on:
       - rabbitmq
     volumes:
-      - ../../../connector/processors/actionRequests/fromUserApiToQueue:/usr/src/app/connector/processors/actionRequests/fromUserApiToQueue
-      - ../../../connector/common:/usr/src/app/connector/common
-      - ../../../modules:/usr/src/app/modules
+      - ../../../:/usr/src/app/
       - shared:/tmp/vc-shared
     environment:
       INTERNAL: ${INTERNAL}
@@ -37,9 +35,7 @@ services:
     depends_on:
       - rabbitmq
     volumes:
-      - ../../../connector/processors/fromTcpInterfaceMessages:/usr/src/app/connector/processors/fromTcpInterfaceMessages
-      - ../../../connector/common:/usr/src/app/connector/common
-      - ../../../modules:/usr/src/app/modules
+      - ../../../:/usr/src/app/
       - shared:/tmp/vc-shared
     environment:
       INTERNAL: ${INTERNAL}
@@ -56,8 +52,7 @@ services:
     depends_on:
       - rabbitmq
     volumes:
-      - ../../../connector/tcpInterface:/usr/src/app/connector/tcpInterface
-      - ../../../connector/common:/usr/src/app/connector/common
+      - ../../../:/usr/src/app/
       - shared:/tmp/vc-shared
     environment:
       RABBITMQ_HOST: rabbitmq
@@ -74,8 +69,7 @@ services:
     depends_on:
       - rabbitmq
     volumes:
-      - ../../../connector/userApi:/usr/src/app/connector/userApi
-      - ../../../connector/common:/usr/src/app/connector/common
+      - ../../../:/usr/src/app/
       - shared:/tmp/vc-shared
     environment:
       RABBITMQ_HOST: rabbitmq

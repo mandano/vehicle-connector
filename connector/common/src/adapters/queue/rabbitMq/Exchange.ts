@@ -49,6 +49,8 @@ export class Exchange implements ExchangeInterface {
       return undefined;
     }
 
+    this._logger.info(`Publishing to channel ${message}`);
+
     return this._channel.publish(this._name, "", Buffer.from(message));
   }
 
