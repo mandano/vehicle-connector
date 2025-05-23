@@ -1,5 +1,9 @@
 import { Request, Response, Router as ExpressRouter } from "express";
 import { v4 as uuidv4 } from "uuid";
+import LoggerInterface from "common/src/logger/LoggerInterface.ts";
+import Channel from "common/src/adapters/queue/rabbitMq/Channel.ts";
+import OnMessageInterfaceV2 from "common/src/adapters/queue/OnMessageInterfaceV2.ts";
+import Exchange from "common/src/adapters/queue/rabbitMq/Exchange.ts";
 
 import { RouteInterface } from "../../RouteInterface.ts";
 import VehicleRepositoryInterface from "../../../../../common/src/repositories/VehicleRepositoryInterface.ts";
@@ -9,16 +13,15 @@ import ContainsLockCheck from "../../../../../common/src/vehicle/components/lock
 
 export class Unlock implements RouteInterface {
   private _path: string = "/vehicle/:id/unlock";
-  private _vehicleRepository: VehicleRepositoryInterface;
-  private _action_responses: ExchangeQueue;
 
   public constructor(
-    vehicleRepository: VehicleRepositoryInterface,
-    action_responses: ExchangeQueue,
-  ) {
-    this._vehicleRepository = vehicleRepository;
-    this._action_responses = action_responses;
-  }
+    private _vehicleRepository: VehicleRepositoryInterface,
+    private _channel: Channel,
+    private _handleResponse: OnMessageInterfaceV2,
+    private _exchange: Exchange,
+    private _applicationName: string,
+    private _logger: LoggerInterface,
+  ) {}
 
   public init(router: ExpressRouter) {
     /**
@@ -126,14 +129,24 @@ export class Unlock implements RouteInterface {
       return;
     }
 
-    const actionResponsesQueueInitiated = await this._action_responses.init();
+    const actionResponses = new ExchangeQueue(
+      this._channel,
+      this._handleResponse,
+      this._handleResponse,
+      this._exchange,
+      this._applicationName,
+      this._logger,
+      true,
+    );
+
+    const actionResponsesQueueInitiated = await actionResponses.init();
 
     if (actionResponsesQueueInitiated === false) {
       res.status(503).json({ message: "Service unavailable" });
       return;
     }
 
-    const consumptionPromise = this._action_responses.consumeWithTimeout(20000, {
+    const consumptionPromise = actionResponses.consumeWithTimeout(20000, {
       vehicleId: vehicle.id,
       targetState: LockComponent.UNLOCKED,
     });
@@ -154,6 +167,11 @@ export class Unlock implements RouteInterface {
     const unlocked = await consumptionPromise;
 
     if (!unlocked) {
+      this._logger.info(
+        `Unlock failed; vehicle id: ${vehicle.id}`,
+        Unlock.name,
+      );
+
       res.status(503).json({
         message:
           "Vehicle could not be unlocked. Response stated failed unlocking.",

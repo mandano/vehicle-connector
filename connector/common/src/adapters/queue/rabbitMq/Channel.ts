@@ -2,9 +2,9 @@ import {
   Channel as AmqplibChannel,
   ConsumeMessage,
   GetMessage,
-  Message,
+  Options,
+  Replies,
 } from "amqplib";
-import { Options, Replies } from "amqplib/properties";
 
 import { LoggerInterface } from "../../../logger/LoggerInterface.ts";
 import { OnMessageInterfaceV2 } from "../OnMessageInterfaceV2.ts";
@@ -205,7 +205,7 @@ export class Channel {
     }
   }
 
-  public ack(message: Message): void {
+  public ack(message: ConsumeMessage): void {
     if (this._channel === undefined) {
       return;
     }
@@ -273,19 +273,33 @@ export class Channel {
       const timer = setTimeout(async () => {
         resolve(false);
         await this.delete(queueName);
+        this._logger.info(
+          `Timeout while waiting for message on queue: ${queueName}`,
+          Channel.name,
+        );
         return;
       }, timeout);
 
       if (this._channel === undefined) {
+        this._logger.error("Channel not initialized", Channel.name);
         return;
       }
 
+      this._logger.info(
+        `Start consuming for vehicleId ${options?.vehicleId}, queueName ${queueName}`,
+        Channel.name,
+      );
       try {
         this._channel
           .consume(
             queueName,
             async (message: ConsumeMessage | null) => {
               if (message === null || message.content === undefined) {
+                // TODO: check why this happens, happens for userApi, acceptance tests locks for example
+                this._logger.error(
+                  `Received null message or message without content`,
+                  Channel.name,
+                );
                 return false;
               }
 
@@ -389,6 +403,7 @@ export class Channel {
     try {
       const deleteQueue = await this._channel.deleteQueue(queueName);
 
+      // TODO: does this condition make sense???
       if (deleteQueue.messageCount === 0) {
         return false;
       }

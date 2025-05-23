@@ -97,12 +97,75 @@ describe("ExchangeQueue", () => {
 
     if (assertedQueue !== undefined) {
       await rabbitMqConnection.close();
-      assert.fail("Queue should exist");
+      assert.fail("Queue should not exist");
     }
 
     await channel.deleteExchange(exchange.name);
     await channel.close();
   });
+
+  it("can consume with timeout, one publisher, two consumers", { timeout: 7000 }, async () => {
+    const testMessage = faker.lorem.sentence();
+    const consume = new FakeOnMessage(true);
+    const consumeWithTimeout = new FakeOnMessage(true);
+    const exchange = new Exchange(channel, "testExchange", logger);
+
+    const exchangeQueueOne = new ExchangeQueue(
+      channel,
+      consume,
+      consumeWithTimeout,
+      exchange,
+      "testApp",
+      logger,
+      true,
+      true,
+    );
+    await exchangeQueueOne.init();
+
+    const exchangeQueueTwo = new ExchangeQueue(
+      channel,
+      consume,
+      consumeWithTimeout,
+      exchange,
+      "testApp",
+      logger,
+      true,
+      true,
+    );
+    await exchangeQueueTwo.init();
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    await channel.publish(exchange.name, "", Buffer.from(testMessage));
+
+    const [resultExchangeQueueOne, resultExchangeQueueTwo] = await Promise.all([
+      exchangeQueueOne.consumeWithTimeout(5000),
+      exchangeQueueTwo.consumeWithTimeout(5000),
+    ]);
+
+    assert.strictEqual(resultExchangeQueueOne, true);
+    assert.strictEqual(resultExchangeQueueTwo, true);
+
+    await channel.deleteExchange(exchange.name);
+
+    const assertedQueueOne = await channel.checkQueue(exchangeQueueOne.name);
+
+    if (assertedQueueOne !== undefined) {
+      await rabbitMqConnection.close();
+      assert.fail("Queue should not exist");
+    }
+
+    const assertedQueueTwo = await channel.checkQueue(exchangeQueueTwo.name);
+
+    if (assertedQueueTwo !== undefined) {
+      await rabbitMqConnection.close();
+      assert.fail("Queue should not exist");
+    }
+
+    await channel.deleteExchange(exchange.name);
+    await channel.close();
+  });
+
 
   it("times out consumption", { timeout: 7000 }, async () => {
     const testMessage = "test message";

@@ -116,6 +116,7 @@ export class ExchangeQueue {
     }
 
     if (this._channel === undefined) {
+      this._logger.error("Channel not initialized", ExchangeQueue.name);
       return undefined;
     }
 
@@ -129,8 +130,8 @@ export class ExchangeQueue {
   }
 
   public async consume(): Promise<boolean> {
-    await this.init();
-    if (this._channel === undefined) {
+    const initiated = await this.init();
+    if (initiated === false || this._channel === undefined) {
       return false;
     }
 

@@ -32,11 +32,6 @@ import { GetRandomCoordinateForLocation } from "./vehicles/position/GetRandomCoo
 import { OpenStreetMap } from "./adapters/OpenStreetMap.ts";
 import loadContext from "./bootstrap/loadContext.ts";
 
-function getRandomElements(arr: string[], count: number): string[] {
-  const shuffled = arr.sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, count);
-}
-
 async function run() {
   dotenv.config();
 
@@ -55,20 +50,16 @@ async function run() {
 
   const imeis: string[] = config.imeis;
 
+  const logger = new Logger(LogLevels.DEBUG_LEVEL);
   if (imeis.length === 0) {
     throw new Error("No imeis found in config");
   }
 
+  logger.info(`Vehicle amount: ${imeis.length}`);
+
   const context = await loadContext();
 
-  const fleetUsageInPercent = 50;
-
-  const amountOfVehicles = Math.floor((imeis.length * fleetUsageInPercent) / 100);
-
-  const randomImeis = getRandomElements(imeis, amountOfVehicles);
   const protocolConfigs = config.protocolConfigs as ProtocolConfigs;
-
-  const logger = new Logger(LogLevels.DEBUG_LEVEL);
   const hashColoredLogger = new HashColoredLogger(LogLevels.DEBUG_LEVEL);
   const rabbitMq = new RabbitMqConnection(
     "amqp://user:password@localhost:5672",
@@ -77,7 +68,7 @@ async function run() {
   const rabbitMqChannel = new Channel(rabbitMq, logger);
   const vehicles = await new SetupSimulatedVehicles(
     logger,
-    randomImeis,
+    imeis,
     rabbitMqChannel,
     hashColoredLogger,
     protocolConfigs,

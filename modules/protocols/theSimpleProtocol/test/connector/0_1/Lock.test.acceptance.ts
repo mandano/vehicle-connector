@@ -21,7 +21,7 @@ describe("Lock v0_1", () => {
     async () => {
       const imei = faker.string.numeric(15);
       const protocolVersion = "0_1";
-      const trackingId = "1234AAAA56789";
+      const trackingId = faker.string.alphanumeric(10);
 
       const sampleData = {
         modelName: "LockableScooter",
@@ -90,7 +90,7 @@ describe("Lock v0_1", () => {
     async () => {
       const imei = faker.string.numeric(15);
       const protocolVersion = "0_1";
-      const trackingId = "1234AAAA56789";
+      const trackingId = faker.string.alphanumeric(10);
 
       const sampleData = {
         modelName: "LockableScooter",

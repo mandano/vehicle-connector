@@ -22,9 +22,11 @@ export class WorkerQueue implements WorkerQueueInterface {
     this._ack = ack;
   }
 
-  private async init(): Promise<void> {
-    await this._channel.init();
-    await this.assert();
+  private async init(): Promise<boolean> {
+    const initiated  = await this._channel.init();
+    const asserted = await this.assert();
+
+    return initiated && asserted;
   }
 
   private async assert(): Promise<boolean> {
@@ -34,7 +36,11 @@ export class WorkerQueue implements WorkerQueueInterface {
   }
 
   public async send(message: string): Promise<boolean> {
-    await this.init();
+    const initiated = await this.init();
+
+    if (!initiated) {
+      return false;
+    }
 
     return this._channel.sendToQueue(this._name, message);
   }
@@ -42,7 +48,11 @@ export class WorkerQueue implements WorkerQueueInterface {
   public async consume(
     onMessage: OnMessageInterface | OnMessageOnDemandInterface,
   ): Promise<void> {
-    await this.init();
+    const initiated = await this.init();
+
+    if (!initiated) {
+      return;
+    }
 
     await this._channel.consume(this._name, onMessage, this._ack);
   }
