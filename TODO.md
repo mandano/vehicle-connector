@@ -1,5 +1,8 @@
 # Version 0.5.0
 
+## Not Started
+- [ ] polish simulator viewer
+
 ## In Progress
 - [ ] pass on tracking id
 
@@ -13,7 +16,7 @@
 # Version 0.3.0
 
 ## Not Started
-- [ ] 60 % test coverage
+- [ ] 70 % test coverage
 - [ ] have min two vehicle types
 
 ## In Progress
@@ -22,6 +25,13 @@
 - [ ] handle energy
 
 # Version 0.2.0
+## Not Started
+- [ ] 60 % test coverage
+- [ ] polish connector codebase
+- [ ] polish simulator codebase
+
+
+# Version 0.1.0
 
 ## Completed
 - [ ] add vehicle viewer
