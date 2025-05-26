@@ -13,6 +13,7 @@ import { CreateByProtocolAndVersionInterface } from "../../../modules/protocols/
 import CreateMessageLinesInterface from "../../../modules/protocols/common/src/simulator/toConnector/update/CreateMessageLinesInterface.ts";
 import CreateMessageLineInterface from "../../../modules/protocols/common/src/simulator/pakets/lock/CreateMessageLineInterface.ts";
 import CreateActionInterface from "../../../modules/protocols/common/src/simulator/toConnector/update/action/CreateActionInterface.ts";
+import CreateLockableScooter from "../../../connector/common/src/vehicle/model/builders/create/lockableScooter/CreateLockableScooter.ts";
 
 import { SendUpdate } from "./sendToConnector/update/SendUpdate.ts";
 import { SimulatedVehicle } from "./SimulatedVehicle.ts";
@@ -25,7 +26,6 @@ import { ReactToAction } from "./actions/ReactToAction.ts";
 import { AdHocPublisher } from "./adHocUpdate/AdHocPublisher.ts";
 import { SendLock } from "./adHocUpdate/SendLock.ts";
 import { ProtocolConfigs } from "./ProtocolConfigs.ts";
-import { CreateLockableScooter } from "./models/create/CreateLockableScooter.ts";
 import { PickRandomLocation } from "./position/PickRandomLocation.ts";
 
 export class SetupSimulatedVehicles {
@@ -80,6 +80,7 @@ export class SetupSimulatedVehicles {
           latitude: randomCoordinate.latitude,
           longitude: randomCoordinate.longitude,
         },
+        initWithDefaultValues: true
       });
 
       const adHocUpdates = new WorkerQueue(this._channel, "adHocUpdate");

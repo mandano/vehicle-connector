@@ -289,40 +289,21 @@ export class Channel {
         `Start consuming for vehicleId ${options?.vehicleId}, queueName ${queueName}`,
         Channel.name,
       );
+
       try {
+        const messageHandlerWithTimeout = this.createMessageHandlerWithTimeout(
+          queueName,
+          onMessage,
+          ack,
+          resolve,
+          timer,
+          options,
+        );
+
         this._channel
           .consume(
             queueName,
-            async (message: ConsumeMessage | null) => {
-              if (message === null || message.content === undefined) {
-                // TODO: check why this happens, happens for userApi, acceptance tests locks for example
-                this._logger.error(
-                  `Received null message or message without content`,
-                  Channel.name,
-                );
-                return false;
-              }
-
-              const messageAsString = message.content.toString();
-              // TODO: test up to this part
-
-              const success = await onMessage.run(messageAsString, options);
-
-              if (success) {
-                clearTimeout(timer);
-                await this.delete(queueName);
-                resolve(true);
-
-                return;
-              }
-
-              if (!ack) {
-                return;
-              }
-
-              this.ack(message);
-              return;
-            },
+            messageHandlerWithTimeout,
             { noAck: !ack },
           )
           .then();
@@ -420,6 +401,44 @@ export class Channel {
 
   get connected(): boolean {
     return this._connected;
+  }
+
+  private createMessageHandlerWithTimeout(
+    queueName: string,
+    onMessage: OnMessageInterfaceV2,
+    ack: boolean,
+    resolve: (value: boolean) => void,
+    timer: NodeJS.Timeout,
+    options?: {
+      vehicleId?: number;
+      targetState?: typeof Lock.LOCKED | typeof Lock.UNLOCKED;
+    },
+  ): (message: ConsumeMessage | null) => Promise<boolean | void> {
+    return async (message: ConsumeMessage | null) => {
+      if (message === null || message.content === undefined) {
+        this._logger.error(
+          `Received null message or message without content`,
+          Channel.name,
+        );
+        return false;
+      }
+
+      const messageAsString = message.content.toString();
+      const success = await onMessage.run(messageAsString, options);
+
+      if (success) {
+        clearTimeout(timer);
+        await this.delete(queueName);
+        resolve(true);
+        return;
+      }
+
+      if (!ack) {
+        return;
+      }
+
+      this.ack(message);
+    };
   }
 }
 

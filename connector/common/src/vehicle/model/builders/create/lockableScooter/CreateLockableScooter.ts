@@ -99,3 +99,5 @@ export class CreateLockableScooter {
     );
   }
 }
+
+export default CreateLockableScooter;

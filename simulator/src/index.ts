@@ -8,6 +8,7 @@ import { WorkerQueue } from "../../connector/common/src/adapters/queue/rabbitMq/
 import { RabbitMqConnection } from "../../connector/common/src/adapters/queue/rabbitMq/RabbitMqConnection.ts";
 import { Channel } from "../../connector/common/src/adapters/queue/rabbitMq/Channel.ts";
 import { HashColoredLogger } from "../../connector/common/src/logger/HashColoredLogger.ts";
+import CreateLockableScooter from "../../connector/common/src/vehicle/model/builders/create/lockableScooter/CreateLockableScooter.ts";
 
 import { Manager as ReservationManager } from "./reservations/manage/Manager.ts";
 import { CreateReservation } from "./reservations/CreateReservation.ts";
@@ -24,7 +25,6 @@ import { AdHocUpdateJsonConverter } from "./vehicles/adHocUpdate/AdHocUpdateJson
 import { UpdateEnergy } from "./vehicles/update/energy/UpdateEnergy.ts";
 import { UpdateOdometer } from "./vehicles/update/odometer/UpdateOdometer.ts";
 import { ProtocolConfigs } from "./vehicles/ProtocolConfigs.ts";
-import { CreateLockableScooter } from "./vehicles/models/create/CreateLockableScooter.ts";
 import { PickRandomLocation } from "./vehicles/position/PickRandomLocation.ts";
 import { Location } from "./vehicles/position/Location.ts";
 import { Coordinate } from "./vehicles/position/Coordinate.ts";
@@ -80,7 +80,7 @@ async function run() {
     context.createMessageLineContextByProtocolAndVersion,
     context.createMessageLines,
     context.lockToMessageLine,
-    context.createAction
+    context.createAction,
   ).run();
   const reservationsScenario = new DefaultScenario();
 
