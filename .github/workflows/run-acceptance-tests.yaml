@@ -58,6 +58,14 @@ jobs:
           npm install --save-dev
           cd -
 
+      - name: Run tests
+        if: env.SKIP != 'true'
+        timeout-minutes: 5
+        run: |
+          ./infrastructure/scripts/workflows/trigger-tests.sh pipeline:test:acceptance:run
+        env:
+          CHANGED: ${{ env.CHANGED }}
+
       - name: Down RabbitMq
         if: env.servicesUp == 'true'
         run: |
