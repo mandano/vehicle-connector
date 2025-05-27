@@ -9,7 +9,7 @@ for path in $CHANGED; do
   echo "Running tests in $path"
 
   if npm run | grep -q "$1"; then
-      npm run "$1";
+      npm run "$1" || exit 1;
   fi
 
   cd - || exit 1
