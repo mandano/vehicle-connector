@@ -1,4 +1,4 @@
-name: Run integration tests on affected packages
+name: Run acceptance tests on affected packages
 on:
   push:
     branches:
