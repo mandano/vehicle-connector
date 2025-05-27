@@ -3,7 +3,9 @@
     "test:path-resolver": "node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --test connector/common/test/adapters/fileSystem/PathResolver.test.ts",
     "findCircularDependencies": "madge --circular --extensions ts .",
     "setupDependencies": "npm install",
-    "coverage:units": "c8 node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --test \"**/*.test.ts\""
+    "coverage:units": "c8 node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --test \"**/*.test.ts\"",
+    "pipeline:test:acceptance:external:docker:up": "BASE_RELATIVE_PATH=./ RABBITMQ_PORT=5672 RABBITMQ_MANAGEMENT_PORT=15672 INTERNAL=false TCP_PORT=1234 USER_API_PORT=3000 docker compose -f ./infrastructure/podman/testing/compose.yml -p acceptance_tests up -d",
+    "pipeline:test:acceptance:docker:down": "BASE_RELATIVE_PATH=./ docker compose -f ./infrastructure/podman/testing/compose.yml -p acceptance_tests down --volumes"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
