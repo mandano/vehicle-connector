@@ -1,5 +1,5 @@
 # Vehicle Connector
-Use REST-API to connect to vehicles via TCP/HTTP. Only TCP is supported for at the moment.
+Use REST-API to connect to vehicles via TCP/HTTP. Only TCP is supported at the moment.
 
 The Connector application consists of 4 services. For debugging and simulation a viewer and a simulation service are available.
 
