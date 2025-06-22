@@ -13,6 +13,12 @@ services:
       timeout: 10s
       retries: 3
 
+  valkey:
+    image: docker.io/valkey/valkey:8.1
+    ports:
+      - "${VALKEY_PORT}:6379"
+    restart: unless-stopped
+
   c_p_action_requests:
     build:
       context: ../../../connector/processors/actionRequests/fromUserApiToQueue
@@ -27,6 +33,7 @@ services:
       RABBITMQ_HOST: rabbitmq
       FILES_PATH_PRIVATE: /tmp
       FILES_PATH_SHARED: /tmp/vc-shared
+      VALKEY_HOST: valkey
 
   c_p_from_tcp_interface_messages:
     build:
@@ -42,6 +49,7 @@ services:
       RABBITMQ_HOST: rabbitmq
       FILES_PATH_PRIVATE: /tmp
       FILES_PATH_SHARED: /tmp/vc-shared
+      VALKEY_HOST: valkey
 
   tcp_interface:
     build:
@@ -75,6 +83,7 @@ services:
       RABBITMQ_HOST: rabbitmq
       FILES_PATH_PRIVATE: /tmp
       FILES_PATH_SHARED: /tmp/vc-shared
+      VALKEY_HOST: valkey
 volumes:
   shared:
 

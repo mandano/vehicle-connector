@@ -1,15 +1,18 @@
 import { Request, Response, Router as ExpressRouter } from "express";
+import ContainsNetwork from "common/src/vehicle/components/iot/network/ContainsNetwork.ts";
+import VehicleRepositoryHashableInterface from "common/src/repositories/vehicle/VehicleRepositoryHashableInterface.ts";
+import { CreateLockableScooter } from "common/src/vehicle/model/builders/create/lockableScooter/CreateLockableScooter.ts";
 
 import { RouteInterface } from "../../RouteInterface.ts";
-import VehicleRepositoryInterface from "../../../../../common/src/repositories/VehicleRepositoryInterface.ts";
 import CreateModel from "../../../../../common/src/vehicle/model/builders/create/Create.ts";
-import { CreateLockableScooter } from "../../../../../common/src/vehicle/model/builders/create/lockableScooter/CreateLockableScooter.ts";
 import ValidateOptions from "../../../../../common/src/vehicle/model/builders/create/lockableScooter/ValidateOptions.ts";
 
 export default class Create implements RouteInterface {
   private _path: string = "/vehicle/create";
 
-  public constructor(private _vehicleRepository: VehicleRepositoryInterface) {}
+  public constructor(
+    private _vehicleValkeyRepository: VehicleRepositoryHashableInterface,
+  ) {}
 
   public init(router: ExpressRouter) {
     /**
@@ -64,7 +67,19 @@ export default class Create implements RouteInterface {
      *                   examples:
      *                     - Missing modelName
      *                     - Invalid modelName
-     *                     - Invalid model attributes
+     *                     - Invalid model attribute
+     *       409:
+     *         description: Conflict
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 messages:
+     *                   type: array
+     *                   items:
+     *                     type: string
+     *                   examples:
      *                     - Vehicle already exists
      *       500:
      *         description: Internal server error
@@ -109,21 +124,21 @@ export default class Create implements RouteInterface {
     }
 
     if (
-      "network" in model &&
+      ContainsNetwork.run(model) &&
       model.network !== undefined &&
       model.network.containsModules()
     ) {
-      const found = this._vehicleRepository.findByImei(
+      const found = await this._vehicleValkeyRepository.findByImei(
         model.network.connectionModules[0].imei,
       );
 
       if (found !== undefined) {
-        res.status(400).json({ message: "Vehicle already exists" });
+        res.status(409).json({ message: "Vehicle already exists" });
         return;
       }
     }
 
-    const vehicleId = this._vehicleRepository.create(model);
+    const vehicleId = await this._vehicleValkeyRepository.create(model);
 
     if (vehicleId === undefined) {
       res.status(500).json({ message: "Vehicle not created" });

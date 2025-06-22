@@ -7,3 +7,5 @@ export class FakeSendActionRequest implements SendActionRequestInterface {
     return Promise.resolve(undefined);
   }
 }
+
+export default FakeSendActionRequest;

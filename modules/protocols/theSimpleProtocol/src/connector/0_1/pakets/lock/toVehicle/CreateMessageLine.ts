@@ -1,7 +1,8 @@
+import TransferLock from "common/src/vehicle/actions/TransferLock.ts";
+
 import { BuildMessageLineLockInterface } from "../../../../../simulator/0_1/pakets/lock/toConnector/BuildMessageLineLockInterface.ts";
 import { THE_SIMPLE_PROTOCOL_ABBREVIATION } from "../../../../../Protocol.ts";
 import { ID_0_1 } from "../../../../../versions.ts";
-import { TransferLock } from "../../../../../../../../../connector/common/src/vehicle/actions/TransferLock.ts";
 
 export class CreateMessageLine implements BuildMessageLineLockInterface {
   private static paketName = "LOCK";

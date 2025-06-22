@@ -22,27 +22,29 @@ export class Position {
     return this._latitude;
   }
 
-  get longitude(): State<number> {
-    return this._longitude;
-  }
-
-  get accuracy(): State<number> | undefined {
-    return this._accuracy;
-  }
-
-  get createdAt(): Date {
-    return this._createdAt;
-  }
-
   set latitude(latitude: State<number>) {
     this._latitude = latitude;
+  }
+
+  get longitude(): State<number> {
+    return this._longitude;
   }
 
   set longitude(longitude: State<number>) {
     this._longitude = longitude;
   }
 
+  get accuracy(): State<number> | undefined {
+    return this._accuracy;
+  }
+
   set accuracy(accuracy: State<number> | undefined) {
     this._accuracy = accuracy;
   }
+
+  get createdAt(): Date {
+    return this._createdAt;
+  }
 }
+
+export default Position;

@@ -1,34 +1,31 @@
-import { State } from "../../State.ts";
-import { ActionState } from "../../model/actions/ActionState.ts";
-import { SendActionRequestInterface } from "../../model/actions/SendActionRequestInterface.ts";
-import { ActionStateTypes } from "../../model/actions/ActionStateTypes.ts";
+import ActionState from "../../model/actions/ActionState.ts";
+import SendActionRequestInterface from "../../model/actions/SendActionRequestInterface.ts";
+import ActionStateTypes from "../../model/actions/ActionStateTypes.ts";
+
+import LockState from "./LockState.ts";
 
 export class Lock {
   public static LOCKED = "locked";
   public static UNLOCKED = "unlocked";
 
-  private _state?: State<typeof Lock.LOCKED | typeof Lock.UNLOCKED>;
-  private _sendActionRequest: SendActionRequestInterface;
-
   constructor(
-    sendActionRequest: SendActionRequestInterface,
-    state?: State<typeof Lock.LOCKED | typeof Lock.UNLOCKED> | undefined,
-  ) {
-    this._sendActionRequest = sendActionRequest;
-    this._state = state;
-  }
+    private _sendActionRequest?: SendActionRequestInterface,
+    private _state?: LockState | undefined,
+  ) {}
 
-  get state(): State<typeof Lock.LOCKED | typeof Lock.UNLOCKED> | undefined {
+  get state(): LockState | undefined {
     return this._state;
   }
 
-  set state(
-    state: State<typeof Lock.LOCKED | typeof Lock.UNLOCKED> | undefined,
-  ) {
+  set state(state: LockState | undefined) {
     this._state = state;
   }
 
   public async lock(trackingId: string, vehicleId: number): Promise<boolean> {
+    if (!this._sendActionRequest) {
+      return false;
+    }
+
     const forwardedActionRequest = await this._sendActionRequest.run(
       new ActionState(
         Lock.LOCKED,
@@ -43,6 +40,10 @@ export class Lock {
   }
 
   public async unlock(trackingId: string, vehicleId: number): Promise<boolean> {
+    if (!this._sendActionRequest) {
+      return false;
+    }
+
     const forwardedActionRequest = await this._sendActionRequest.run(
       new ActionState(
         Lock.UNLOCKED,
@@ -55,4 +56,14 @@ export class Lock {
 
     return forwardedActionRequest === true;
   }
+
+  public lockingSupported(): boolean {
+    return this._sendActionRequest !== undefined;
+  }
+
+  public unlockingSupported(): boolean {
+    return this._sendActionRequest !== undefined;
+  }
 }
+
+export default Lock;

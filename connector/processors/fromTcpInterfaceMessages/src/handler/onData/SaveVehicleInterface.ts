@@ -2,5 +2,5 @@ import { Imei } from "../../../../../common/src/vehicle/components/iot/network/p
 import { Unknown } from "../../../../../common/src/vehicle/model/models/Unknown.ts";
 
 export interface SaveVehicleInterface {
-  run(model: Unknown, imei: Imei): number | undefined;
+  run(model: Unknown, imei: Imei): Promise<number | undefined>;
 }

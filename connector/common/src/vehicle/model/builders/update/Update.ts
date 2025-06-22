@@ -30,3 +30,5 @@ export class Update implements UpdateInterface {
     return undefined;
   }
 }
+
+export default Update;

@@ -14,3 +14,5 @@ export class ActionStateTypes {
     ActionStateTypes.SPEED_ADJUSTMENT,
   ];
 }
+
+export default ActionStateTypes;

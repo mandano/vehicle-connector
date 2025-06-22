@@ -1,6 +1,6 @@
 import { Network } from "../../../../components/iot/network/Network.ts";
 
-import { UpdateConnectionModules } from "./UpdateConnectionModules.ts";
+import UpdateConnectionModules from "./connectionModule/UpdateConnectionModules.ts";
 import { UpdateNetworkInterface } from "./UpdateNetworkInterface.ts";
 
 export class UpdateNetwork implements UpdateNetworkInterface {
@@ -25,7 +25,7 @@ export class UpdateNetwork implements UpdateNetworkInterface {
       toBeUpdated.connectionModules = updateBy.connectionModules;
     }
 
-    this._updateConnectionModules.run(
+    toBeUpdated.connectionModules = this._updateConnectionModules.run(
       toBeUpdated.connectionModules,
       updateBy.connectionModules,
     );

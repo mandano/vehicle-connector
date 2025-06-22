@@ -1,15 +1,12 @@
-import { State } from "../../../State.ts";
+import State from "../../../State.ts";
 
-import { ConnectionModule } from "./ConnectionModule.ts";
-import { Imei } from "./protocol/Imei.ts";
-import { NetworkInterface } from "./NetworkInterface.ts";
+import ConnectionModule from "./ConnectionModule.ts";
+import type Imei from "./protocol/Imei.ts";
+import NetworkInterface from "./NetworkInterface.ts";
+import ConnectionState from "./ConnectionState.ts";
 
 export class Network implements NetworkInterface {
-  private _connectionModules: ConnectionModule[] = [];
-
-  constructor(connectionModules: ConnectionModule[]) {
-    this._connectionModules = connectionModules;
-  }
+  constructor(private _connectionModules: ConnectionModule[] = []) {}
 
   get connectionModules(): ConnectionModule[] {
     return this._connectionModules;
@@ -22,14 +19,21 @@ export class Network implements NetworkInterface {
   public isConnected(): boolean {
     return this._connectionModules.some(
       (connectionModule) =>
-        connectionModule.state?.state === ConnectionModule.CONNECTED,
+        connectionModule.state?.state.state === ConnectionState.CONNECTED,
     );
   }
 
   public getConnectedModule(): ConnectionModule | undefined {
     return this._connectionModules.find(
       (connectionModule) =>
-        connectionModule.state?.state === ConnectionModule.CONNECTED,
+        connectionModule.state?.state.state === ConnectionState.CONNECTED,
+    );
+  }
+
+  public getConnectedModules(): ConnectionModule[] | undefined {
+    return this._connectionModules.filter(
+      (connectionModule) =>
+        connectionModule.state?.state.state === ConnectionState.CONNECTED,
     );
   }
 
@@ -54,7 +58,7 @@ export class Network implements NetworkInterface {
   public getImeiOfFirstConnectedModule(): Imei | undefined {
     return this._connectionModules.find(
       (connectionModule) =>
-        connectionModule.state?.state === ConnectionModule.CONNECTED,
+        connectionModule.state?.state.state === ConnectionState.CONNECTED,
     )?.imei;
   }
 
@@ -62,7 +66,7 @@ export class Network implements NetworkInterface {
     return (
       this._connectionModules.filter(
         (connectionModule) =>
-          connectionModule.state?.state === ConnectionModule.CONNECTED,
+          connectionModule.state?.state.state === ConnectionState.CONNECTED,
       ).length > 1
     );
   }
@@ -77,12 +81,15 @@ export class Network implements NetworkInterface {
     }
 
     if (this._connectionModules[connectionModuleIdx].state === undefined) {
-      this._connectionModules[connectionModuleIdx].state = new State(
-        ConnectionModule.DISCONNECTED,
-        new Date(),
-        new Date(),
-        new Date(),
+      this._connectionModules[connectionModuleIdx].state = new ConnectionState(
+        new State(
+          ConnectionState.DISCONNECTED,
+          new Date(),
+          new Date(),
+          new Date(),
+        ),
       );
+      return;
     }
 
     this._connectionModules[connectionModuleIdx].setToDisconnected();
@@ -98,14 +105,19 @@ export class Network implements NetworkInterface {
     }
 
     if (this._connectionModules[connectionModuleIdx].state === undefined) {
-      this._connectionModules[connectionModuleIdx].state = new State(
-        ConnectionModule.CONNECTED,
-        new Date(),
-        new Date(),
-        new Date(),
+      this._connectionModules[connectionModuleIdx].state = new ConnectionState(
+        new State(
+          ConnectionState.CONNECTED,
+          new Date(),
+          new Date(),
+          new Date(),
+        ),
       );
-    } else {
-      this._connectionModules[connectionModuleIdx].setToConnected();
+      return;
     }
+
+    this._connectionModules[connectionModuleIdx].setToConnected();
   }
 }
+
+export default Network;

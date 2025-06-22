@@ -1,32 +1,24 @@
 import { LockableScooter } from "../../../models/LockableScooter.ts";
 import { UpdateEnergy } from "../components/UpdateEnergy.ts";
-import { UpdateConnectionModules } from "../components/UpdateConnectionModules.ts";
+import UpdateConnectionModules from "../components/connectionModule/UpdateConnectionModules.ts";
 import { UpdateIoT } from "../components/UpdateIoT.ts";
 import { Unknown } from "../../../models/Unknown.ts";
-import { UpdateLock } from "../components/UpdateLock.ts";
+import { UpdateLockState } from "../components/UpdateLockState.ts";
 import { UpdateSpeedometer } from "../components/speedometer/UpdateSpeedometer.ts";
 import ContainsIot from "../../../../components/iot/ContainsIot.ts";
 import ContainsNetwork from "../../../../components/iot/network/ContainsNetwork.ts";
+import IoT from "../../../../components/iot/IoT.ts";
+import Network from "../../../../components/iot/network/Network.ts";
 
+// TODO: not immutable
 export class UpdateLockableScooter {
-  private _updateEnergy: UpdateEnergy;
-  private _updateConnectionModules: UpdateConnectionModules;
-  private _updateIoT: UpdateIoT;
-  private _updateLock: UpdateLock;
-
   constructor(
-    updateEnergy: UpdateEnergy,
-    updateConnectionModules: UpdateConnectionModules,
-    updateIoT: UpdateIoT,
-    updateLock: UpdateLock,
-    private _updateSpeedometer: UpdateSpeedometer,
-  ) {
-    this._updateEnergy = updateEnergy;
-    this._updateConnectionModules = updateConnectionModules;
-    this._updateIoT = updateIoT;
-    this._updateLock = updateLock;
-    this._updateSpeedometer = _updateSpeedometer;
-  }
+    private readonly _updateEnergy: UpdateEnergy,
+    private readonly _updateConnectionModules: UpdateConnectionModules,
+    private readonly _updateIoT: UpdateIoT,
+    private readonly _updateLockState: UpdateLockState,
+    private readonly _updateSpeedometer: UpdateSpeedometer,
+  ) {}
 
   public run(
     toBeUpdated: LockableScooter,
@@ -82,10 +74,7 @@ export class UpdateLockableScooter {
     toBeUpdated: LockableScooter,
     updateBy: LockableScooter | Unknown,
   ) {
-    if (
-      ContainsIot.run(updateBy) === false ||
-      updateBy.ioT === undefined
-    ) {
+    if (ContainsIot.run(updateBy) === false || updateBy.ioT === undefined) {
       return undefined;
     }
 
@@ -100,13 +89,27 @@ export class UpdateLockableScooter {
       return;
     }
 
-    if (toBeUpdated.network.connectionModules === undefined) {
-      toBeUpdated.network.connectionModules =
+    if (toBeUpdated.ioT === undefined) {
+      toBeUpdated.ioT = new IoT(
+        new Network(updateBy.ioT.network.connectionModules),
+      );
+      return;
+    }
+
+    if (toBeUpdated.ioT.network === undefined) {
+      toBeUpdated.ioT.network = new Network(
+        updateBy.ioT.network.connectionModules,
+      );
+      return;
+    }
+
+    if (toBeUpdated.ioT.network.connectionModules.length === 0) {
+      toBeUpdated.ioT.network.connectionModules =
         updateBy.ioT.network.connectionModules;
     }
 
     this._updateConnectionModules.run(
-      toBeUpdated.network.connectionModules,
+      toBeUpdated.ioT.network.connectionModules,
       updateBy.ioT.network.connectionModules,
     );
   }
@@ -115,15 +118,21 @@ export class UpdateLockableScooter {
     toBeUpdated: LockableScooter,
     updateBy: LockableScooter | Unknown,
   ) {
-    if (updateBy.lock === undefined) {
+    if (updateBy.lock === undefined || updateBy.lock.state === undefined) {
       return;
     }
 
     if (toBeUpdated.lock === undefined) {
       toBeUpdated.lock = updateBy.lock;
+      return;
     }
 
-    this._updateLock.run(toBeUpdated.lock, updateBy.lock);
+    if (toBeUpdated.lock.state === undefined) {
+      toBeUpdated.lock.state = updateBy.lock.state;
+      return;
+    }
+
+    this._updateLockState.run(toBeUpdated.lock.state, updateBy.lock.state);
   }
 
   private speedometer(

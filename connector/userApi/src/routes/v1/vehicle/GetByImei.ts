@@ -1,15 +1,12 @@
 import { Request, Response, Router as ExpressRouter } from "express";
+import VehicleRepositoryHashableInterface from "common/src/repositories/vehicle/VehicleRepositoryHashableInterface.ts";
 
 import { RouteInterface } from "../../RouteInterface.ts";
-import VehicleRepositoryInterface from "../../../../../common/src/repositories/VehicleRepositoryInterface.ts";
 
 export class GetByImei implements RouteInterface {
   private _path: string = "/vehicle/:imei([a-zA-Z0-9]{15})";
-  private _vehicleRepository: VehicleRepositoryInterface;
 
-  constructor(vehicleRepository: VehicleRepositoryInterface) {
-    this._vehicleRepository = vehicleRepository;
-  }
+  constructor(private readonly _vehicleRepository: VehicleRepositoryHashableInterface) {}
 
   public init(router: ExpressRouter) {
     /**
@@ -173,25 +170,25 @@ export class GetByImei implements RouteInterface {
      *                   type: string
      *                   example: Vehicle not found
      */
-    router.get(this._path, (req: Request, res: Response) => {
-      this.run(req, res);
+    router.get(this._path, async (req: Request, res: Response) => {
+      await this.run(req, res);
     });
   }
 
-  private run(req: Request, res: Response): void {
+  private async run(req: Request, res: Response): Promise<void> {
     const imei = req.params.imei;
 
     if (!imei) {
       res.status(400).json({ message: "Missing imei" });
     }
 
-    const vehicle = this._vehicleRepository.findByImeiJson(imei);
+    const vehicle = await this._vehicleRepository.findByImeiStorageObject(imei);
 
     if (!vehicle) {
       res.status(404).json({ message: "Vehicle not found" });
       return;
     }
 
-    res.status(200).json(vehicle);
+    res.status(200).json(vehicle.value);
   }
 }

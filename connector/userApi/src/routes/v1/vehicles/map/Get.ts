@@ -1,15 +1,12 @@
 import { Request, Response, Router as ExpressRouter } from "express";
+import VehicleRepositoryHashableInterface from "common/src/repositories/vehicle/VehicleRepositoryHashableInterface.ts";
 
 import { RouteInterface } from "../../../RouteInterface.ts";
-import VehicleRepositoryInterface from "../../../../../../common/src/repositories/VehicleRepositoryInterface.ts";
 
 export class Get implements RouteInterface {
   private _path: string = "/vehicles/map";
-  private _vehicleRepository: VehicleRepositoryInterface;
 
-  constructor(vehicleRepository: VehicleRepositoryInterface) {
-    this._vehicleRepository = vehicleRepository;
-  }
+  constructor(private readonly _vehicleRepository: VehicleRepositoryHashableInterface) {}
 
   public init(router: ExpressRouter) {
     /**
@@ -44,13 +41,15 @@ export class Get implements RouteInterface {
      *                   type: string
      *                   example: Hello, world!
      */
-    router.get(this._path, (req: Request, res: Response) => {
-      this.run(req, res);
+    router.get(this._path, async (req: Request, res: Response) => {
+      await this.run(req, res);
     });
   }
 
-  private run(req: Request, res: Response): void {
-    const vehicles = this._vehicleRepository.findAllJson(0, 500);
+  private async run(req: Request, res: Response): Promise<void> {
+    // TODO: remove id hardcoding
+    const hashables = await this._vehicleRepository.findAllStorageObject(0, 500);
+    const vehicles = hashables.map((hashable) => hashable.value);
 
     res.status(200).json(vehicles);
   }

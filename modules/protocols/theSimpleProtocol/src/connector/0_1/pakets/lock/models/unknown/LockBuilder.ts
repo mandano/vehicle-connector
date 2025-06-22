@@ -1,5 +1,7 @@
-import { Lock } from "../../Lock.ts";
-import { Lock as LockComponent } from "../../../../../../../../../../connector/common/src/vehicle/components/lock/Lock.ts";
+import LockState from "common/src/vehicle/components/lock/LockState.ts";
+
+import LockPaket from "../../Lock.ts";
+import Lock from "../../../../../../../../../../connector/common/src/vehicle/components/lock/Lock.ts";
 import { SendActionRequestInterface } from "../../../../../../../../../../connector/common/src/vehicle/model/actions/SendActionRequestInterface.ts";
 
 export class LockBuilder {
@@ -7,7 +9,10 @@ export class LockBuilder {
     private readonly _sendActionRequest: SendActionRequestInterface,
   ) {}
 
-  public build(lock: Lock): LockComponent {
-    return new LockComponent(this._sendActionRequest, lock.state);
+  public build(lock: LockPaket): Lock {
+    return new Lock(
+      this._sendActionRequest,
+      new LockState(lock.state),
+    );
   }
 }

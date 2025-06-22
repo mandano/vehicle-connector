@@ -13,13 +13,13 @@ import { ForwardToActionResponsesInterface } from "./ForwardToActionResponsesInt
 
 export class HandleFirstPaket implements HandleFirstPaketInterface {
   constructor(
-    private _imeiSocketIdRepository: ImeiSocketIdRepositoryInterface,
-    private _saveVehicle: SaveVehicleInterface,
-    private _createModelByPaket: CreateByMessageLineContextInterface,
-    private _forwardLockAttribute: ForwardToActionResponsesInterface,
-    private _acknowledge: AcknowledgeInterface,
+    private readonly _imeiSocketIdRepository: ImeiSocketIdRepositoryInterface,
+    private readonly _saveVehicle: SaveVehicleInterface,
+    private readonly _createModelByPaket: CreateByMessageLineContextInterface,
+    private readonly _forwardLockAttribute: ForwardToActionResponsesInterface,
+    private readonly _acknowledge: AcknowledgeInterface,
     private readonly _logger: LoggerInterface,
-    private _createMessageLineContext: CreateMessageLineContextInterface,
+    private readonly _createMessageLineContext: CreateMessageLineContextInterface,
   ) {}
 
   public async run(messageLine: string, socketId: string): Promise<void> {
@@ -60,14 +60,14 @@ export class HandleFirstPaket implements HandleFirstPaketInterface {
       vehicleModelByPaket.ioT.network.setConnectionModuleToConnected(imei);
     }
 
-    const vehicleId = this._saveVehicle.run(vehicleModelByPaket, imei);
+    const vehicleId = await this._saveVehicle.run(vehicleModelByPaket, imei);
 
     if (
       vehicleModelByPaket?.lock?.state !== undefined &&
       vehicleId !== undefined
     ) {
       const forwarded = await this._forwardLockAttribute.run(
-        vehicleModelByPaket.lock.state.state,
+        vehicleModelByPaket.lock.state.state.state,
         vehicleId,
       );
 

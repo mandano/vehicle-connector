@@ -55,7 +55,7 @@ export class ImeiSocketIdFileRepository implements ImeiSocketIdRepositoryInterfa
       }
     });
 
-    if (foundKey == undefined) {
+    if (foundKey === undefined) {
       return false;
     }
 
@@ -77,7 +77,7 @@ export class ImeiSocketIdFileRepository implements ImeiSocketIdRepositoryInterfa
       }
     });
 
-    if (foundKey == undefined) {
+    if (foundKey === undefined) {
       return undefined;
     }
 

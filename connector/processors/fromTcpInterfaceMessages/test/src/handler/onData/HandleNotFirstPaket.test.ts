@@ -2,18 +2,20 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
 import { anything, instance, mock, verify, when } from "ts-mockito";
+import ConnectionState from "common/src/vehicle/components/iot/network/ConnectionState.ts";
+import LockState from "common/src/vehicle/components/lock/LockState.ts";
+import { FakeLogger } from "common/test/logger/FakeLogger.ts";
+import VehicleValkeyRepository from "common/src/repositories/vehicle/valkey/VehicleValkeyRepository.ts";
+import Hashable from "common/src/entities/Hashable.ts";
 
-import { FakeLogger } from "../../../../../../common/test/logger/FakeLogger.ts";
 import { FakeCreateByMessageLineContext } from "../../../../../../common/test/vehicle/model/builders/create/byMessageLineContext/FakeCreateByMessageLineContext.ts";
 import { CreateUnknown } from "../../../../../../common/test/vehicle/model/models/create/CreateUnknown.ts";
 import { Acknowledge } from "../../../../../../common/test/vehicle/iot/network/protocol/Acknowledge.fake.ts";
 import { HandleNotFirstPaket } from "../../../../src/handler/onData/HandleNotFirstPaket.ts";
 import { CreateUpdateSimpleScooter } from "../../../../../../../modules/protocols/theSimpleProtocol/test/connector/0_1/updateSimpleScooter/fromVehicle/CreateUpdateSimpleScooter.ts";
 import BuildMessageLine from "../../../../../../../modules/protocols/theSimpleProtocol/src/simulator/0_1/pakets/simpleUpdate/toConnector/CreateMessageLine.ts";
-import { FakeVehicleFileSystemRepository } from "../../../../../../common/test/repositories/FakeVehicleFileSystemRepository.ts";
 import { UpdateVehicle } from "../../../../src/handler/onData/UpdateVehicle.ts";
 import { Vehicle } from "../../../../../../common/src/vehicle/Vehicle.ts";
-import VehicleFileSystemRepository from "../../../../../../common/src/repositories/VehicleFileSystemRepository.ts";
 import { Network } from "../../../../../../common/src/vehicle/components/iot/network/Network.ts";
 import { ConnectionModule } from "../../../../../../common/src/vehicle/components/iot/network/ConnectionModule.ts";
 import { State } from "../../../../../../common/src/vehicle/State.ts";
@@ -36,7 +38,7 @@ describe("HandleNotFirstPaket", () => {
     const protocol = THE_SIMPLE_PROTOCOL;
     const connectionModule = new ConnectionModule(
       imei,
-      new State(ConnectionModule.CONNECTED),
+      new ConnectionState(new State(ConnectionState.CONNECTED)),
       undefined,
       new State(protocol),
       undefined,
@@ -55,6 +57,9 @@ describe("HandleNotFirstPaket", () => {
       new CreateUnknown().run(),
     );
     const mockedUpdateVehicle = mock(UpdateVehicle);
+    when(
+      mockedUpdateVehicle.run(anything(), anything(), anything()),
+    ).thenResolve(true);
     const updateVehicle = instance(mockedUpdateVehicle);
     const messageLineContext = new CreateMessageLineContext().run();
 
@@ -64,8 +69,10 @@ describe("HandleNotFirstPaket", () => {
 
     const forwardLockAttribute = new ForwardToActionResponses();
     const acknowledge = new Acknowledge();
-    const mockedVehicleRepository = mock(VehicleFileSystemRepository);
-    when(mockedVehicleRepository.findByImei(imei)).thenReturn(vehicle);
+    const mockedVehicleRepository = mock(VehicleValkeyRepository);
+    when(mockedVehicleRepository.findByImei(imei)).thenResolve(
+      new Hashable("lala", vehicle),
+    );
 
     const vehicleRepository = instance(mockedVehicleRepository);
 
@@ -80,7 +87,9 @@ describe("HandleNotFirstPaket", () => {
     );
 
     await handleNotFirstPaket.run(messageLine, imei, socketId);
-    verify(mockedUpdateVehicle.run(anything(), anything())).called();
+    verify(
+      mockedUpdateVehicle.run(anything(), anything(), anything()),
+    ).called();
   });
 
   it("should forward lock state when available", async () => {
@@ -90,14 +99,17 @@ describe("HandleNotFirstPaket", () => {
     const protocol = THE_SIMPLE_PROTOCOL;
     const connectionModule = new ConnectionModule(
       imei,
-      new State(ConnectionModule.CONNECTED),
+      new ConnectionState(new State(ConnectionState.CONNECTED)),
       undefined,
       new State(protocol),
       undefined,
       new State(protocolVersion),
     );
     const lockState = new State(Lock.LOCKED);
-    const lock = new Lock(new FakeSendActionRequest(), lockState);
+    const lock = new Lock(
+      new FakeSendActionRequest(),
+      new LockState(lockState),
+    );
     const vehicle = new Vehicle(
       123,
       new CreateUnknown().run({
@@ -123,8 +135,10 @@ describe("HandleNotFirstPaket", () => {
     const forwardLockAttribute = instance(mockedForwardLockAttribute);
     const acknowledge = new Acknowledge();
 
-    const mockedVehicleRepository = mock(VehicleFileSystemRepository);
-    when(mockedVehicleRepository.findByImei(imei)).thenReturn(vehicle);
+    const mockedVehicleRepository = mock(VehicleValkeyRepository);
+    when(mockedVehicleRepository.findByImei(imei)).thenResolve(
+      new Hashable("laa", vehicle),
+    );
 
     const vehicleRepository = instance(mockedVehicleRepository);
 
@@ -144,7 +158,7 @@ describe("HandleNotFirstPaket", () => {
     ).called();
   });
 
-  it("should not forward lock state when vehicle id is undefined", async () => {
+  it("should return early if vehicle not found", async () => {
     const imei = "123456789012345";
     const socketId = "socket123";
     const updateSimpleScooter = new CreateUpdateSimpleScooter().run();
@@ -162,7 +176,11 @@ describe("HandleNotFirstPaket", () => {
 
     const forwardLockAttribute = new ForwardToActionResponses();
     const acknowledge = new Acknowledge();
-    const vehicleRepository = new FakeVehicleFileSystemRepository();
+
+    const mockedVehicleRepository = mock(VehicleValkeyRepository);
+    when(mockedVehicleRepository.findByImei(imei)).thenResolve(undefined);
+
+    const vehicleRepository = instance(mockedVehicleRepository);
 
     const handleNotFirstPaket = new HandleNotFirstPaket(
       vehicleRepository,
@@ -185,7 +203,7 @@ describe("HandleNotFirstPaket", () => {
     const protocol = THE_SIMPLE_PROTOCOL;
     const connectionModule = new ConnectionModule(
       imei,
-      new State(ConnectionModule.CONNECTED),
+      new ConnectionState(new State(ConnectionState.CONNECTED)),
       undefined,
       new State(protocol),
       undefined,
@@ -214,8 +232,10 @@ describe("HandleNotFirstPaket", () => {
 
     const forwardLockAttribute = new ForwardToActionResponses();
     const acknowledge = new Acknowledge(false);
-    const mockedVehicleRepository = mock(VehicleFileSystemRepository);
-    when(mockedVehicleRepository.findByImei(imei)).thenReturn(vehicle);
+    const mockedVehicleRepository = mock(VehicleValkeyRepository);
+    when(mockedVehicleRepository.findByImei(imei)).thenResolve(
+      new Hashable("laa", vehicle),
+    );
 
     const vehicleRepository = instance(mockedVehicleRepository);
 

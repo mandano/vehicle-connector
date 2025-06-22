@@ -43,7 +43,16 @@ jobs:
           
           cd -
 
-      - name: Link workflow network to RabbitMQ network
+      - name: Up Valkey
+        if: env.SKIP != 'true'
+        run: |
+          cd connector/common
+          
+          npm run test:integration:valkey:docker:up
+          
+          cd -
+
+      - name: Link workflow network to integration test network
         run: |
           docker network connect connector_common_integration_tests_default $HOSTNAME
 
