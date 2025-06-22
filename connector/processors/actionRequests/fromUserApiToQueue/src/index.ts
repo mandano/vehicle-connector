@@ -1,26 +1,17 @@
 import path from "node:path";
 
 import dotenv from "dotenv";
+import DtoContext from "common/src/vehicle/dto/_Context.ts";
+import VehicleValkeyRepository from "common/src/repositories/vehicle/valkey/VehicleValkeyRepository.ts";
+import ValkeyAdapter from "common/src/adapters/valkey/ValkeyAdapter.ts";
 
-import VehicleFileSystemRepository from "../../../../common/src/repositories/VehicleFileSystemRepository.ts";
 import WorkerQueue from "../../../../common/src/adapters/queue/rabbitMq/WorkerQueue.ts";
 import Exchange from "../../../../common/src/adapters/queue/rabbitMq/Exchange.ts";
-import VehicleToJsonVehicle from "../../../../common/src/vehicle/json/vehicleToJsonVehicle/VehicleToJsonVehicle.ts";
-import VehicleToJsonVehicleUnknown from "../../../../common/src/vehicle/json/vehicleToJsonVehicle/models/Unknown.ts";
-import NetworkBuilder from "../../../../common/src/vehicle/json/vehicleToJsonVehicle/models/unknown/NetworkBuilder.ts";
-import PositionBuilder from "../../../../common/src/vehicle/json/vehicleToJsonVehicle/models/unknown/PositionBuilder.ts";
-import EnergyBuilder from "../../../../common/src/vehicle/json/vehicleToJsonVehicle/models/unknown/EnergyBuilder.ts";
-import JsonVehicleToVehicle from "../../../../common/src/vehicle/json/jsonVehicleToVehicle/JsonVehicleToVehicle.ts";
-import SetConnectionModules from "../../../../common/src/vehicle/json/jsonVehicleToVehicle/SetConnectionModules.ts";
-import SetState from "../../../../common/src/vehicle/json/jsonVehicleToVehicle/SetState.ts";
-import JsonVehicleToVehicleLockableScooter from "../../../../common/src/vehicle/json/jsonVehicleToVehicle/models/LockableScooter.ts";
 import SendActionRequest from "../../../../common/src/vehicle/model/actions/SendActionRequest.ts";
-import JsonVehicleToVehicleUnknown from "../../../../common/src/vehicle/json/jsonVehicleToVehicle/models/Unknown.ts";
 import FileSystemAdapter from "../../../../common/src/adapters/FileSystemAdapter.ts";
 import SendAction from "../../../../common/src/vehicle/actions/SendAction.ts";
 import Logger from "../../../../common/src/logger/Logger.ts";
 import LogLevels from "../../../../common/src/logger/LogLevels.ts";
-import VehicleToJsonVehicleLockableScooter from "../../../../common/src/vehicle/json/vehicleToJsonVehicle/models/LockableScooter.ts";
 import ImeiSocketIdFileRepository from "../../../../common/src/repositories/ImeiSocketIdFileRepository.ts";
 import ActionStateFromJson from "../../../../common/src/vehicle/model/actions/json/ActionStateFromJson.ts";
 import Channel from "../../../../common/src/adapters/queue/rabbitMq/Channel.ts";
@@ -48,35 +39,20 @@ async function run() {
     process.env.FILES_PATH_SHARED || "tmp",
   );
 
-  const fileSystemAdapter = new FileSystemAdapter(logger);
-  const vehicleRepository = new VehicleFileSystemRepository(
-    path.join(filesPathShared, "vehicles.json"),
-    fileSystemAdapter,
-    new VehicleToJsonVehicle(
-      new VehicleToJsonVehicleUnknown(
-        new NetworkBuilder(),
-        new PositionBuilder(),
-        new EnergyBuilder(),
-      ),
-      new VehicleToJsonVehicleLockableScooter(
-        new NetworkBuilder(),
-        new PositionBuilder(),
-        new EnergyBuilder(),
-      ),
-    ),
-    new JsonVehicleToVehicle(
-      new JsonVehicleToVehicleLockableScooter(
-        new SetConnectionModules(new SetState()),
-        new SetState(),
-        new SendActionRequest(
-          new WorkerQueue(rabbitMqChannel, "action_requests"),
-        ),
-      ),
-      new JsonVehicleToVehicleUnknown(
-        new SetConnectionModules(new SetState()),
-        new SetState(),
-      ),
-    ),
+  const dtoContext = new DtoContext(
+    new SendActionRequest(new WorkerQueue(rabbitMqChannel, "action_requests")),
+  );
+
+  const vehicleRepository = new VehicleValkeyRepository(
+    new ValkeyAdapter(logger, {
+      host: process.env.VALKEY_HOST ?? "localhost",
+      port:  process.env.VALKEY_PORT ? parseInt(process.env.VALKEY_PORT) : 6379,
+    }),
+    logger,
+    dtoContext.objectToDto().objectToDto(),
+    dtoContext.dtoToVehicle().dtoToVehicle(),
+    dtoContext.vehicleToObject(),
+    dtoContext.dtoToObject(),
   );
 
   const exchange = new Exchange(rabbitMqChannel, "toTcpInterface", logger);
@@ -111,8 +87,8 @@ async function run() {
           context.createMessageLine,
         ),
         logger,
-        new ActionStateFromJson(logger),
         hashColoredLogger,
+        new ActionStateFromJson(logger),
       ),
     )
     .then(() => {});

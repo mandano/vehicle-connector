@@ -1,4 +1,4 @@
-import { State } from "../../../../State.ts";
+import State from "../../../../State.ts";
 
 export class UpdateState {
   public run<T>(
@@ -6,11 +6,21 @@ export class UpdateState {
     updateBy: State<T> | undefined,
   ): State<T> | undefined {
     if (toBeUpdated === undefined && updateBy !== undefined) {
-      return updateBy;
+      return new State(
+        updateBy.state,
+        updateBy.originatedAt,
+        updateBy.updatedAt,
+        updateBy.createdAt,
+      );
     }
 
     if (toBeUpdated !== undefined && updateBy === undefined) {
-      return toBeUpdated;
+      return new State(
+        toBeUpdated.state,
+        toBeUpdated.originatedAt,
+        toBeUpdated.updatedAt,
+        toBeUpdated.createdAt,
+      );
     }
 
     if (toBeUpdated === undefined || updateBy === undefined) {
@@ -21,22 +31,36 @@ export class UpdateState {
       updateBy.originatedAt !== undefined &&
       toBeUpdated.originatedAt === undefined
     ) {
-      return updateBy;
+      return new State(
+        updateBy.state,
+        updateBy.originatedAt,
+        updateBy.updatedAt,
+        updateBy.createdAt,
+      );
     }
 
     if (
       updateBy.originatedAt === undefined &&
       toBeUpdated.originatedAt !== undefined
     ) {
-      return toBeUpdated;
+      return new State(
+        toBeUpdated.state,
+        toBeUpdated.originatedAt,
+        toBeUpdated.updatedAt,
+        toBeUpdated.createdAt,
+      );
     }
 
     if (
       updateBy.originatedAt === undefined &&
       toBeUpdated.originatedAt === undefined
     ) {
-      toBeUpdated.state = updateBy.state;
-      toBeUpdated.updatedAt = new Date();
+      return new State(
+        updateBy.state,
+        undefined,
+        new Date(),
+        toBeUpdated.createdAt,
+      );
     }
 
     if (
@@ -44,11 +68,16 @@ export class UpdateState {
       toBeUpdated.originatedAt !== undefined &&
       updateBy.originatedAt > toBeUpdated.originatedAt
     ) {
-      toBeUpdated.state = updateBy.state;
-      toBeUpdated.originatedAt = updateBy.originatedAt;
-      toBeUpdated.updatedAt = new Date();
+      return new State(
+        updateBy.state,
+        updateBy.originatedAt,
+        new Date(),
+        toBeUpdated.createdAt,
+      );
     }
 
     return toBeUpdated;
   }
 }
+
+export default UpdateState;

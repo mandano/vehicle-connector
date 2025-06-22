@@ -1,4 +1,3 @@
-import { Network } from "../../components/iot/network/Network.ts";
 import { Batteries } from "../../components/energy/Batteries.ts";
 import { ContainsLockInterface } from "../../components/lock/ContainsLockInterface.ts";
 import { Lock } from "../../components/lock/Lock.ts";
@@ -20,29 +19,22 @@ export class LockableScooter
     ContainsOdometerInterface,
     EnergyLevelInterface
 {
-  private readonly _network: Network;
   private _batteries?: Batteries;
   private _ioT?: IoT;
   private _lock: Lock;
   private _speedometer?: Speedometer;
 
   constructor(
-    network: Network,
     lock: Lock,
     energy?: Batteries,
     ioT?: IoT,
     speedometer?: Speedometer,
     private _odometer?: Odometer,
   ) {
-    this._network = network;
     this._batteries = energy;
     this._ioT = ioT;
     this._lock = lock;
     this._speedometer = speedometer;
-  }
-
-  get network(): Network {
-    return this._network;
   }
 
   get batteries(): Batteries | undefined {

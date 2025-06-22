@@ -14,13 +14,15 @@ describe("UpdateState", () => {
   it("should return updateBy if toBeUpdated is undefined", () => {
     const updateBy = new State<number>(1, new Date());
     const result = updateState.run(undefined, updateBy);
-    assert.strictEqual(result, updateBy);
+    assert.deepStrictEqual(result, updateBy);
+    assert.notStrictEqual(result, updateBy);
   });
 
   it("should return toBeUpdated if updateBy is undefined", () => {
     const toBeUpdated = new State<number>(1, new Date());
     const result = updateState.run(toBeUpdated, undefined);
-    assert.strictEqual(result, toBeUpdated);
+    assert.deepStrictEqual(result, toBeUpdated);
+    assert.notStrictEqual(result, toBeUpdated);
   });
 
   it("should return undefined if both toBeUpdated and updateBy are undefined", () => {
@@ -32,14 +34,16 @@ describe("UpdateState", () => {
     const updateBy = new State<number>(1, new Date());
     const toBeUpdated = new State<number>(2);
     const result = updateState.run(toBeUpdated, updateBy);
-    assert.strictEqual(result, updateBy);
+    assert.deepStrictEqual(result, updateBy);
+    assert.notStrictEqual(result, updateBy);
   });
 
   it("should return toBeUpdated if toBeUpdated has originatedAt and updateBy does not", () => {
     const toBeUpdated = new State<number>(1, new Date());
     const updateBy = new State<number>(2);
     const result = updateState.run(toBeUpdated, updateBy);
-    assert.strictEqual(result, toBeUpdated);
+    assert.deepStrictEqual(result, toBeUpdated);
+    assert.notStrictEqual(result, toBeUpdated);
   });
 
   it("should update state and updatedAt if both originatedAt are undefined", () => {

@@ -8,3 +8,9 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: user
       RABBITMQ_DEFAULT_PASS: password
+  valkey:
+    image: docker.io/valkey/valkey:8.1
+    container_name: vc-dev-valkey
+    ports:
+      - "6379:6379"
+    restart: unless-stopped

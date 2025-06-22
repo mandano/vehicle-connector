@@ -1,6 +1,6 @@
 import { Unknown } from "../../../models/Unknown.ts";
 import { UpdateEnergy } from "../components/UpdateEnergy.ts";
-import { UpdateConnectionModules } from "../components/UpdateConnectionModules.ts";
+import UpdateConnectionModules from "../components/connectionModule/UpdateConnectionModules.ts";
 import { UpdateIoT } from "../components/UpdateIoT.ts";
 import ContainsIot from "../../../../components/iot/ContainsIot.ts";
 import ContainsNetwork from "../../../../components/iot/network/ContainsNetwork.ts";
@@ -84,7 +84,7 @@ export class UpdateUnknown {
         updateBy.ioT.network.connectionModules;
     }
 
-    this._updateConnectionModules.run(
+    toBeUpdated.ioT.network.connectionModules = this._updateConnectionModules.run(
       toBeUpdated.ioT.network.connectionModules,
       updateBy.ioT.network.connectionModules,
     );

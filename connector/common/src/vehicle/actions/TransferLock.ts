@@ -30,3 +30,5 @@ export class TransferLock {
     return this._imei;
   }
 }
+
+export default TransferLock;

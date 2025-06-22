@@ -1,8 +1,9 @@
+import IsVehicleStorageObject from "common/src/vehicle/IsVehicleStorageObject.ts";
+
 import { UnlockResponse } from "../httpClient/responses/v1/vehicle/UnlockResponse.ts";
 import { LockResponse } from "../httpClient/responses/v1/vehicle/LockResponse.ts";
 import HttpClient from "../httpClient/HttpClient.ts";
 import { Imei } from "../../../../connector/common/src/vehicle/components/iot/network/protocol/Imei.ts";
-import { JsonVehicle } from "../../../../connector/common/src/vehicle/json/JsonVehicle.ts";
 import { typeNames as modelTypeNames } from "../../../../connector/common/src/vehicle/model/models/types.ts";
 import { ModelNameResponse } from "../httpClient/responses/v1/vehicle/ModelNameResponse.ts";
 import { HashColoredLoggerInterface } from "../../../../connector/common/src/logger/HashColoredLoggerInterface.ts";
@@ -112,21 +113,12 @@ export class UserApiActions {
 
   public async getVehicleIdByImei(imei: Imei): Promise<number | undefined> {
     const url = `/api/v1/vehicle/${imei}`;
-    const jsonVehicle = await this._httpClient.get(url);
+    const vehicle = await this._httpClient.get(url);
 
-    if (!this.isJsonVehicle(jsonVehicle)) {
+    if (!IsVehicleStorageObject.run(vehicle)) {
       return undefined;
     }
 
-    return jsonVehicle.id;
-  }
-
-  private isJsonVehicle(response: unknown): response is JsonVehicle {
-    return (
-      response !== undefined &&
-      (response as JsonVehicle).id !== undefined &&
-      (response as JsonVehicle).model !== undefined &&
-      (response as JsonVehicle).createdAt !== undefined
-    );
+    return vehicle.id;
   }
 }

@@ -10,7 +10,7 @@ import { Channel } from "../../connector/common/src/adapters/queue/rabbitMq/Chan
 import { HashColoredLogger } from "../../connector/common/src/logger/HashColoredLogger.ts";
 import CreateLockableScooter from "../../connector/common/src/vehicle/model/builders/create/lockableScooter/CreateLockableScooter.ts";
 
-import { Manager as ReservationManager } from "./reservations/manage/Manager.ts";
+import ManageReservations from "./reservations/manage/Manage.ts";
 import { CreateReservation } from "./reservations/CreateReservation.ts";
 import { GetRandomRadiusCoordinateTowardsTarget } from "./vehicles/position/GetRandomRadiusCoordinateTowardsTarget.ts";
 import { DefaultScenario } from "./reservations/manage/DefaultScenario.ts";
@@ -31,6 +31,9 @@ import { Coordinate } from "./vehicles/position/Coordinate.ts";
 import { GetRandomCoordinateForLocation } from "./vehicles/position/GetRandomCoordinateForLocation.ts";
 import { OpenStreetMap } from "./adapters/OpenStreetMap.ts";
 import loadContext from "./bootstrap/loadContext.ts";
+import Add from "./reservations/manage/Add.ts";
+import Remove from "./reservations/manage/Remove.ts";
+import ChangeModelType from "./vehicles/ChangeModelType.ts";
 
 async function run() {
   dotenv.config();
@@ -84,18 +87,28 @@ async function run() {
   ).run();
   const reservationsScenario = new DefaultScenario();
 
-  const reservationManager = new ReservationManager(
+  const changeModelType = new ChangeModelType(logger);
+
+  const manageReservations = new ManageReservations(
     vehicles,
     reservationsScenario,
-    new CreateReservation(new Graphhopper(apiKey), logger),
-    new GetRandomRadiusCoordinateTowardsTarget(
-      reservationsScenario.getRandomKickScooterRentalMileage(),
-      0.5,
-    ),
     logger,
+    new Add(
+      logger,
+      new CreateReservation(new Graphhopper(apiKey), logger),
+      new GetRandomRadiusCoordinateTowardsTarget(
+        reservationsScenario.getRandomKickScooterRentalMileage(),
+        0.5,
+      ),
+      changeModelType
+    ),
+    new Remove(
+      logger,
+      changeModelType,
+    ),
   );
 
-  reservationManager.run().then((r) => console.log(r));
+  manageReservations.run().then((r) => console.log(r));
 
   const vehicleUpdatePublisher = new VehicleUpdatePublisher(
     vehicles,

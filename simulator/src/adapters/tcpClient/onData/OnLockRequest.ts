@@ -27,16 +27,16 @@ export class OnLockRequest {
     if (vehicle.model.lock === undefined) {
       vehicle.model.lock = new Lock(
         new FakeSendActionRequest(),
-        lockState.state,
+        lockState,
       );
     } else if (vehicle.model.lock.state === undefined) {
-      vehicle.model.lock.state = lockState.state;
-      vehicle.model.lock.state.originatedAt = new Date();
-      vehicle.model.lock.state.updatedAt = new Date();
+      vehicle.model.lock.state = lockState;
+      vehicle.model.lock.state.state.originatedAt = new Date();
+      vehicle.model.lock.state.state.updatedAt = new Date();
     } else {
-      vehicle.model.lock.state = lockState.state;
-      vehicle.model.lock.state.originatedAt = new Date();
-      vehicle.model.lock.state.updatedAt = new Date();
+      vehicle.model.lock.state = lockState;
+      vehicle.model.lock.state.state.originatedAt = new Date();
+      vehicle.model.lock.state.state.updatedAt = new Date();
     }
   }
 }

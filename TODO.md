@@ -18,6 +18,7 @@
 ## Not Started
 - [ ] 70 % test coverage
 - [ ] have min two vehicle types
+- [ ] do not track routes in viewer, introduce API for simulator
 
 ## In Progress
 - [ ] handle speed
@@ -30,6 +31,8 @@
 - [ ] polish connector codebase
 - [ ] polish simulator codebase
 
+## In Progress
+- [ ] replace tmp file based vehicle repository by redis based repositry
 
 # Version 0.1.0
 

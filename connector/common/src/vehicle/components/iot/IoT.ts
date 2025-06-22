@@ -26,3 +26,5 @@ export class IoT {
     this._position = position;
   }
 }
+
+export default IoT;

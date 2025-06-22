@@ -1,15 +1,12 @@
 import { Request, Response, Router as ExpressRouter } from "express";
+import VehicleRepositoryHashableInterface from "common/src/repositories/vehicle/VehicleRepositoryHashableInterface.ts";
 
 import { RouteInterface } from "../../RouteInterface.ts";
-import VehicleRepositoryInterface from "../../../../../common/src/repositories/VehicleRepositoryInterface.ts";
 
 export class Get implements RouteInterface {
   private _path: string = "/vehicle/:id([0-9]{1,6})";
-  private _vehicleRepository: VehicleRepositoryInterface;
 
-  constructor(vehicleRepository: VehicleRepositoryInterface) {
-    this._vehicleRepository = vehicleRepository;
-  }
+  constructor(private readonly _vehicleRepository: VehicleRepositoryHashableInterface) {}
 
   public init(router: ExpressRouter) {
     /**
@@ -174,12 +171,12 @@ export class Get implements RouteInterface {
      *                   type: string
      *                   example: Vehicle not found
      */
-    router.get(this._path, (req: Request, res: Response) => {
-      this.run(req, res);
+    router.get(this._path, async (req: Request, res: Response) => {
+      await this.run(req, res);
     });
   }
 
-  private run(req: Request, res: Response): void {
+  private async run(req: Request, res: Response): Promise<void> {
     const id = req.params.id;
 
     if (!id) {
@@ -188,13 +185,13 @@ export class Get implements RouteInterface {
 
     const vehicleId = parseInt(id);
 
-    const vehicle = this._vehicleRepository.findByIdJson(vehicleId);
+    const vehicle = await this._vehicleRepository.findByIdStorageObject(vehicleId);
 
     if (!vehicle) {
       res.status(404).json({ message: "Vehicle not found" });
       return;
     }
 
-    res.status(200).json(vehicle);
+    res.status(200).json(vehicle.value);
   }
 }

@@ -11,3 +11,5 @@ export interface NetworkInterface {
   isConnected(): boolean;
   containsModules(): boolean;
 }
+
+export default NetworkInterface;

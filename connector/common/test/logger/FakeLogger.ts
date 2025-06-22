@@ -27,3 +27,5 @@ export class FakeLogger implements LoggerInterface {
     return this._loggedMessages;
   }
 }
+
+export default FakeLogger;

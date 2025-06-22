@@ -14,7 +14,7 @@ export class SaveMessageLineContextToVehicle
     model: Unknown,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     imei: Imei
-  ): number | undefined {
-    return this._vehicleId;
+  ): Promise<number | undefined> {
+    return Promise.resolve(this._vehicleId);
   }
 }

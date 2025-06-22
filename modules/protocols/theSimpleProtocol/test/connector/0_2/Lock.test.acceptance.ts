@@ -14,7 +14,7 @@ describe("Lock v0_2", () => {
   const tcpPort = process.env.TCP_PORT ? parseInt(process.env.TCP_PORT) : 1240;
 
   it(
-    "can look vehicle",
+    "can lock vehicle",
     {
       timeout: 10000,
     },

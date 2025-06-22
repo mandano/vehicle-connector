@@ -15,3 +15,5 @@ export class Odometer {
     return this._state;
   }
 }
+
+export default Odometer;

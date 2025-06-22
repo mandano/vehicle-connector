@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
 import { instance, mock, verify, when } from "ts-mockito";
+import LockState from "common/src/vehicle/components/lock/LockState.ts";
 
 import { HandleFirstPaket } from "../../../../src/handler/onData/HandleFirstPaket.ts";
 import { FakeLogger } from "../../../../../../common/test/logger/FakeLogger.ts";
@@ -177,7 +178,10 @@ describe("HandleFirstPaket", () => {
     );
 
     const unknown = new CreateUnknown().run({
-      lock: new Lock(new FakeSendActionRequest(), new State(Lock.LOCKED)),
+      lock: new Lock(
+        new FakeSendActionRequest(),
+        new LockState(new State(Lock.LOCKED)),
+      ),
     });
 
     if (unknown.lock?.state === undefined) {
@@ -210,7 +214,7 @@ describe("HandleFirstPaket", () => {
     await handleFirstPaket.run(messageLine, socketId);
 
     verify(
-      mockedForwardLockAttribute.run(unknown.lock.state.state, 123),
+      mockedForwardLockAttribute.run(unknown.lock.state.state.state, 123),
     ).once();
   });
 

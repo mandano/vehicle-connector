@@ -71,7 +71,7 @@ else
 fi
 
 echo "🧹 Cleaning old files (except .git)..."
-find . -mindepth 1 -maxdepth 1 ! -name ".git" -exec rm -rf {} +
+find . -mindepth 1 -maxdepth 1 ! -name ".git" ! -name ".idea" -exec rm -rf {} +
 
 echo "📂 Extracting archive..."
 tar -xf "$EXPORT_TAR"
