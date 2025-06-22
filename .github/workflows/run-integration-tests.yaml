@@ -87,17 +87,11 @@ jobs:
         env:
           CHANGED: ${{ env.CHANGED }}
 
-      - name: Down RabbitMq
+      - name: Down services
         if: env.rabbitUp == 'true'
         run: |
           cd connector/common
-          npm run pipeline:github:rabbitmq:docker:down
+          npm run pipeline:github:docker:down
           cd -
 
-      - name: Down Valkey
-        if: env.valkeyUp == 'true'
-        run: |
-          cd connector/common
-          npm run pipeline:github:valkey:docker:down
-          cd -
 
