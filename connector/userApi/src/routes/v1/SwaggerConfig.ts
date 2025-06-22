@@ -10,6 +10,7 @@ export class SwaggerConfig {
     "./src/routes/v1/health/Queue.ts",
     "./src/routes/v1/models/create/Get.ts",
     "./src/routes/v1/vehicle/Create.ts",
+    "./src/routes/v1/vehicle/IsConnected.ts",
   ];
 
   constructor(port: number) {

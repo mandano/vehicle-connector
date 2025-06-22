@@ -1,7 +1,7 @@
 import { Request, Response, Router as ExpressRouter } from "express";
+import VehicleRepositoryHashableInterface from "common/src/repositories/vehicle/VehicleRepositoryHashableInterface.ts";
 
 import { RouteInterface } from "../../RouteInterface.ts";
-import VehicleRepositoryInterface from "../../../../../common/src/repositories/VehicleRepositoryInterface.ts";
 import {
   typeNames as modelTypeNames,
   names as modelNames,
@@ -9,11 +9,8 @@ import {
 
 export class UpdateModelName implements RouteInterface {
   private _path: string = "/vehicle/:id/modelName";
-  private _vehicleRepository: VehicleRepositoryInterface;
 
-  constructor(vehicleRepository: VehicleRepositoryInterface) {
-    this._vehicleRepository = vehicleRepository;
-  }
+  constructor(private readonly _vehicleRepository: VehicleRepositoryHashableInterface) {}
 
   public init(router: ExpressRouter) {
     /**
@@ -82,12 +79,12 @@ export class UpdateModelName implements RouteInterface {
      *                   type: string
      *                   example: Vehicle not found
      */
-    router.put(this._path, (req: Request, res: Response) => {
-      this.run(req, res);
+    router.put(this._path, async (req: Request, res: Response) => {
+      await this.run(req, res);
     });
   }
 
-  private run(req: Request, res: Response): void {
+  private async run(req: Request, res: Response): Promise<void> {
     const id = req.params.id;
 
     if (req.body === undefined) {
@@ -112,14 +109,19 @@ export class UpdateModelName implements RouteInterface {
     }
 
     const vehicleId = parseInt(id);
-    const vehicle = this._vehicleRepository.findById(vehicleId);
+    const hashable = await this._vehicleRepository.findById(vehicleId);
+    const vehicle = hashable?.value;
 
     if (!vehicle) {
       res.status(404).json({ message: "Vehicle not found" });
       return;
     }
 
-    this._vehicleRepository.updateModelName(vehicle.id, modelName);
+    await this._vehicleRepository.updateModelName(
+      vehicle.id,
+      modelName,
+      hashable?.hash,
+    );
 
     res.status(200).json({ message: "Model name updated successfully" });
   }

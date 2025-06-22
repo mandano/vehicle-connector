@@ -78,3 +78,5 @@ export class SimulatedVehicle {
     return published;
   }
 }
+
+export default SimulatedVehicle;

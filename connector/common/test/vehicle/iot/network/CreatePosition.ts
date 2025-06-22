@@ -32,3 +32,5 @@ export class CreatePosition {
     );
   }
 }
+
+export default CreatePosition;

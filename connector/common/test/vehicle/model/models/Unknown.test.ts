@@ -12,6 +12,7 @@ import { State } from "../../../../src/vehicle/State.ts";
 import { Battery } from "../../../../src/vehicle/components/energy/Battery.ts";
 import { FakeSendActionRequest } from "../actions/FakeSendActionRequest.ts";
 import ContainsIot from "../../../../src/vehicle/components/iot/ContainsIot.ts";
+import LockState from "../../../../src/vehicle/components/lock/LockState.ts";
 
 describe("Unknown", () => {
   let network: Network;
@@ -24,7 +25,7 @@ describe("Unknown", () => {
     network = new CreateNetwork().run();
     energy = new Batteries([new Battery(new State(0), new State(0))]);
     iot = new IoT(network);
-    lock = new Lock(new FakeSendActionRequest(), new State(Lock.LOCKED));
+    lock = new Lock(new FakeSendActionRequest(), new LockState(new State(Lock.LOCKED)));
     speedometer = new Speedometer(new State(0));
   });
 

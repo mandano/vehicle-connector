@@ -1,5 +1,6 @@
+import VehicleRepositoryHashableInterface from "common/src/repositories/vehicle/VehicleRepositoryHashableInterface.ts";
+
 import { Unknown } from "../../../../../common/src/vehicle/model/models/Unknown.ts";
-import VehicleRepositoryInterface from "../../../../../common/src/repositories/VehicleRepositoryInterface.ts";
 import { LoggerInterface } from "../../../../../common/src/logger/LoggerInterface.ts";
 import { UpdateInterface } from "../../../../../common/src/vehicle/model/builders/update/UpdateInterface.ts";
 import { types as modelTypes } from "../../../../../../connector/common/src/vehicle/model/models/types.ts";
@@ -8,12 +9,12 @@ import ContainsNetwork from "../../../../../common/src/vehicle/components/iot/ne
 
 export class UpdateVehicle {
   constructor(
-    private readonly _vehicleRepository: VehicleRepositoryInterface,
+    private readonly _vehicleRepository: VehicleRepositoryHashableInterface,
     private readonly _logger: LoggerInterface,
-    private _update: UpdateInterface,
+    private readonly _update: UpdateInterface,
   ) {}
 
-  public run(updateBy: Unknown, toBeUpdated: modelTypes): boolean {
+  public async run(updateBy: Unknown, toBeUpdated: modelTypes, validationHash: string): Promise<boolean> {
     const updatedVehicleModel = this._update.run(toBeUpdated, updateBy);
 
     if (updatedVehicleModel === undefined) {
@@ -47,9 +48,10 @@ export class UpdateVehicle {
       return false;
     }
 
-    return this._vehicleRepository.updateByImei(
+    return await this._vehicleRepository.updateByImei(
       updatedVehicleModel?.ioT.network.connectionModules[0].imei,
       updatedVehicleModel,
+      validationHash,
     );
   }
 }

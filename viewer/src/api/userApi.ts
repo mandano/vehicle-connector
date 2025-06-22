@@ -1,4 +1,4 @@
-import { Vehicle } from "../types/Vehicle.ts";
+import Vehicle from "../types/Vehicle";
 
 const API_URL = "/api/v1";
 

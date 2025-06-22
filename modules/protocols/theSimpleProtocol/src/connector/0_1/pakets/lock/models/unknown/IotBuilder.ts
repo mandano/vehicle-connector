@@ -1,5 +1,5 @@
 import { IoT } from "../../../../../../../../../../connector/common/src/vehicle/components/iot/IoT.ts";
-import { Lock } from "../../Lock.ts";
+import LockPaket from "../../Lock.ts";
 
 import { NetworkBuilder } from "./NetworkBuilder.ts";
 
@@ -10,8 +10,8 @@ export class IotBuilder {
     this._networkBuilder = networkBuilder;
   }
 
-  public build(lock: Lock): IoT {
-    const network = this._networkBuilder.build(lock);
+  public build(lockPaket: LockPaket): IoT {
+    const network = this._networkBuilder.build(lockPaket);
 
     return new IoT(network);
   }

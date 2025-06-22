@@ -48,3 +48,5 @@ export class Batteries implements EnergyComponentsInterface {
     return latest;
   }
 }
+
+export default Batteries;

@@ -7,7 +7,7 @@ export class FakeOnDisconnection implements OnDisconnectionInterface {
     this._runReturnValue = runReturnValue;
   }
 
-  public run(): boolean | undefined {
-    return this._runReturnValue;
+  public run(): Promise<boolean | undefined> {
+    return Promise.resolve(this._runReturnValue);
   }
 }

@@ -1,6 +1,7 @@
+import VehicleRepositoryHashableInterface from "common/src/repositories/vehicle/VehicleRepositoryHashableInterface.ts";
+
 import { Imei } from "../../../../../common/src/vehicle/components/iot/network/protocol/Imei.ts";
 import { Unknown } from "../../../../../common/src/vehicle/model/models/Unknown.ts";
-import VehicleRepositoryInterface from "../../../../../common/src/repositories/VehicleRepositoryInterface.ts";
 import { LoggerInterface } from "../../../../../common/src/logger/LoggerInterface.ts";
 import { types as modelTypes } from "../../../../../common/src/vehicle/model/models/types.ts";
 import { UpdateInterface } from "../../../../../common/src/vehicle/model/builders/update/UpdateInterface.ts";
@@ -11,22 +12,22 @@ import { SaveVehicleInterface } from "./SaveVehicleInterface.ts";
 
 export class SaveVehicle implements SaveVehicleInterface {
   constructor(
-    private readonly _vehicleRepository: VehicleRepositoryInterface,
+    private readonly _vehicleRepository: VehicleRepositoryHashableInterface,
     private readonly _logger: LoggerInterface,
     private readonly _allowAutomaticVehicleCreation: boolean = true,
-    private _update: UpdateInterface,
+    private readonly _update: UpdateInterface,
   ) {}
 
-  public run(model: Unknown, imei: Imei): number | undefined {
-    const existingVehicle = this._vehicleRepository.findByImei(imei);
+  public async run(model: Unknown, imei: Imei): Promise<number | undefined> {
+    const hashable = await this._vehicleRepository.findByImei(imei);
 
-    if (existingVehicle === undefined && !this._allowAutomaticVehicleCreation) {
+    if (hashable === undefined && !this._allowAutomaticVehicleCreation) {
       this._logger.warn(`Vehicle with IMEI ${imei} not found`);
       return undefined;
     }
 
-    if (existingVehicle === undefined) {
-      const vehicleId = this._vehicleRepository.create(model);
+    if (hashable === undefined) {
+      const vehicleId = await this._vehicleRepository.create(model);
 
       if (vehicleId === undefined) {
         this._logger.warn(`Vehicle not created`);
@@ -36,13 +37,24 @@ export class SaveVehicle implements SaveVehicleInterface {
       return vehicleId;
     }
 
-    this.update(existingVehicle.model, model);
+    const existingVehicle = hashable.value;
+
+    const updated = await this.update(existingVehicle.model, model, hashable.hash);
+
+    if (updated !== true) {
+      this._logger.warn(`Vehicle not updated`);
+      return undefined;
+    }
 
     return existingVehicle.id;
   }
 
   //TODO: change to boolean return data type
-  private update(toBeUpdated: modelTypes, updateBy: Unknown): void {
+  private async update(
+    toBeUpdated: modelTypes,
+    updateBy: Unknown,
+    validationHash: string,
+  ): Promise<boolean | undefined> {
     const updatedVehicleModel = this._update.run(toBeUpdated, updateBy);
 
     if (updatedVehicleModel === undefined) {
@@ -76,9 +88,10 @@ export class SaveVehicle implements SaveVehicleInterface {
       return undefined;
     }
 
-    this._vehicleRepository.updateByImei(
+    return await this._vehicleRepository.updateByImei(
       updatedVehicleModel?.ioT.network.connectionModules[0].imei,
       updatedVehicleModel,
+      validationHash,
     );
   }
 }

@@ -266,7 +266,9 @@ describe("UpdatePosition", () => {
 
     const result = updatePosition.run(toBeUpdated, updateBy);
 
-    assert.strictEqual(result.accuracy, toBeUpdatedAccuracy);
+    assert.deepStrictEqual(result.accuracy, toBeUpdatedAccuracy);
+    assert.notStrictEqual(result.accuracy, toBeUpdatedAccuracy);
+
     assert.strictEqual(
       result.accuracy?.originatedAt,
       toBeUpdated.accuracy?.originatedAt,

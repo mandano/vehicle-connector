@@ -1,8 +1,9 @@
+import VehicleRepositoryHashableInterface from "common/src/repositories/vehicle/VehicleRepositoryHashableInterface.ts";
+
 import { MessageLineContext } from "../../../../../common/src/vehicle/components/iot/network/protocol/messageLineContext/MessageLineContext.ts";
 import { Imei } from "../../../../../common/src/vehicle/components/iot/network/protocol/Imei.ts";
 import { AcknowledgeInterface } from "../../../../../common/src/vehicle/components/iot/network/protocol/AcknowledgeInterface.ts";
 import { LoggerInterface } from "../../../../../common/src/logger/LoggerInterface.ts";
-import VehicleRepositoryInterface from "../../../../../common/src/repositories/VehicleRepositoryInterface.ts";
 import { CreateByMessageLineContextInterface } from "../../../../../../modules/protocols/common/src/connector/fromVehicle/models/CreateByMessageLineContextInterface.ts";
 import { CreateByProtocolAndVersionInterface } from "../../../../../../modules/protocols/common/src/connector/fromVehicle/CreateByProtocolAndVersionInterface.ts";
 import ContainsIot from "../../../../../common/src/vehicle/components/iot/ContainsIot.ts";
@@ -14,12 +15,12 @@ import { UpdateVehicle } from "./UpdateVehicle.ts";
 
 export class HandleNotFirstPaket implements HandleNotFirstPaketInterface {
   constructor(
-    private readonly _vehicleRepository: VehicleRepositoryInterface,
-    private _updateVehicle: UpdateVehicle,
-    private _createMessageLineContext: CreateByProtocolAndVersionInterface,
-    private _createModelByPaket: CreateByMessageLineContextInterface,
-    private _forwardLockAttribute: ForwardToActionResponsesInterface,
-    private _acknowledge: AcknowledgeInterface,
+    private readonly _vehicleRepository: VehicleRepositoryHashableInterface,
+    private readonly _updateVehicle: UpdateVehicle,
+    private readonly _createMessageLineContext: CreateByProtocolAndVersionInterface,
+    private readonly _createModelByPaket: CreateByMessageLineContextInterface,
+    private readonly _forwardLockAttribute: ForwardToActionResponsesInterface,
+    private readonly _acknowledge: AcknowledgeInterface,
     private readonly _logger: LoggerInterface,
   ) {}
   public async run(
@@ -27,14 +28,15 @@ export class HandleNotFirstPaket implements HandleNotFirstPaketInterface {
     imei: Imei,
     socketId: string,
   ): Promise<void> {
-    const vehicleStored = this._vehicleRepository.findByImei(imei);
-    if (vehicleStored === undefined) {
+    const hashable = await this._vehicleRepository.findByImei(imei);
+    if (hashable === undefined) {
       this._logger.error(
         `Vehicle with IMEI ${imei} not found`,
         HandleNotFirstPaket.name,
       );
       return;
     }
+    const vehicleStored = hashable.value;
 
     if (
       !ContainsIot.run(vehicleStored.model) ||
@@ -92,9 +94,10 @@ export class HandleNotFirstPaket implements HandleNotFirstPaketInterface {
       return;
     }
 
-    const updated = this._updateVehicle.run(
+    const updated = await this._updateVehicle.run(
       vehicleModelByPaket,
       vehicleStored.model,
+      hashable.hash,
     );
 
     if (updated === false) {
@@ -104,7 +107,7 @@ export class HandleNotFirstPaket implements HandleNotFirstPaketInterface {
 
     if (vehicleModelByPaket?.lock?.state !== undefined) {
       const forwarded = await this._forwardLockAttribute.run(
-        vehicleModelByPaket.lock.state.state,
+        vehicleModelByPaket.lock.state.state.state,
         vehicleStored.id,
       );
 

@@ -10,15 +10,19 @@ import { Batteries } from "../../../../components/energy/Batteries.ts";
 import { Battery } from "../../../../components/energy/Battery.ts";
 import { Speedometer } from "../../../../components/speedometer/Speedometer.ts";
 import { Odometer } from "../../../../components/odometer/Odometer.ts";
+import ConnectionState from "../../../../components/iot/network/ConnectionState.ts";
+import LockState from "../../../../components/lock/LockState.ts";
 
 import Options from "./Options.ts";
 
 export class CreateLockableScooter {
   // TODO: proper validation of option attributes needed
   public run(options: Options): LockableScooter {
-    const connectionState = new State<
-      typeof ConnectionModule.DISCONNECTED | typeof ConnectionModule.CONNECTED
-    >(ConnectionModule.DISCONNECTED, new Date(), undefined, new Date());
+    const connectionState = new ConnectionState(
+      new State<
+        typeof ConnectionState.DISCONNECTED | typeof ConnectionState.CONNECTED
+      >(ConnectionState.DISCONNECTED, new Date(), undefined, new Date()),
+    );
 
     const protocolVersion = new State(
       options["protocolVersion"],
@@ -72,7 +76,9 @@ export class CreateLockableScooter {
     if (lock === undefined) {
       lock = new Lock(
         new FakeSendActionRequest(),
-        new State(Lock.UNLOCKED, new Date(), undefined, new Date()),
+        new LockState(
+          new State(Lock.LOCKED, new Date(), undefined, new Date()),
+        ),
       );
     }
 
@@ -84,18 +90,15 @@ export class CreateLockableScooter {
       speedometer = new Speedometer(
         new State(0, new Date(), undefined, new Date()),
       );
-      odometer = new Odometer(
-        new State(0, new Date(), undefined, new Date()),
-      );
+      odometer = new Odometer(new State(0, new Date(), undefined, new Date()));
     }
 
     return new LockableScooter(
-      network,
       lock,
       batteries,
       iot,
       speedometer,
-      odometer
+      odometer,
     );
   }
 }

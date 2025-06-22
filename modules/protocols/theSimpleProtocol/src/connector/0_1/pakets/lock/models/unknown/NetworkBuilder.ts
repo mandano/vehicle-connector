@@ -2,7 +2,7 @@ import { Network } from "../../../../../../../../../../connector/common/src/vehi
 import { ConnectionModule } from "../../../../../../../../../../connector/common/src/vehicle/components/iot/network/ConnectionModule.ts";
 import { State } from "../../../../../../../../../../connector/common/src/vehicle/State.ts";
 import { THE_SIMPLE_PROTOCOL } from "../../../../../../Protocol.ts";
-import { Lock } from "../../Lock.ts";
+import Lock from "../../Lock.ts";
 
 export class NetworkBuilder {
   public build(lock: Lock): Network {

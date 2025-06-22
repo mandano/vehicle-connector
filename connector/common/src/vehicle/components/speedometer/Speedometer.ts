@@ -20,3 +20,5 @@ export class Speedometer {
     return this._state;
   }
 }
+
+export default Speedometer;

@@ -1,5 +1,6 @@
+import VehicleRepositoryHashableInterface from "common/src/repositories/vehicle/VehicleRepositoryHashableInterface.ts";
+
 import { TcpInterfaceMessage } from "../../../../common/src/entities/tcpInterfaceMessage/TcpInterfaceMessage.ts";
-import VehicleRepositoryInterface from "../../../../common/src/repositories/VehicleRepositoryInterface.ts";
 import { ImeiSocketIdRepositoryInterface } from "../../../../common/src/repositories/ImeiSocketIdRepositoryInterface.ts";
 import { LoggerInterface } from "../../../../common/src/logger/LoggerInterface.ts";
 import ContainsIot from "../../../../common/src/vehicle/components/iot/ContainsIot.ts";
@@ -8,21 +9,15 @@ import ContainsNetwork from "../../../../common/src/vehicle/components/iot/netwo
 import { OnDisconnectionInterface } from "./OnDisconnectionInterface.ts";
 
 export class OnDisconnection implements OnDisconnectionInterface {
-  private _imeiSocketIdRepository: ImeiSocketIdRepositoryInterface;
-  private _vehicleRepository: VehicleRepositoryInterface;
-  private _logger: LoggerInterface;
-
   constructor(
-    imeiSocketIdRepository: ImeiSocketIdRepositoryInterface,
-    vehicleRepository: VehicleRepositoryInterface,
-    logger: LoggerInterface,
-  ) {
-    this._imeiSocketIdRepository = imeiSocketIdRepository;
-    this._vehicleRepository = vehicleRepository;
-    this._logger = logger;
-  }
+    private readonly _imeiSocketIdRepository: ImeiSocketIdRepositoryInterface,
+    private readonly _vehicleRepository: VehicleRepositoryHashableInterface,
+    private readonly _logger: LoggerInterface,
+  ) {}
 
-  public run(tcpInterfaceMessage: TcpInterfaceMessage): boolean | undefined {
+  public async run(
+    tcpInterfaceMessage: TcpInterfaceMessage,
+  ): Promise<boolean | undefined> {
     const socketId = tcpInterfaceMessage.socketId;
     const imei = this._imeiSocketIdRepository.getImei(socketId);
 
@@ -32,12 +27,13 @@ export class OnDisconnection implements OnDisconnectionInterface {
       return undefined;
     }
 
-    const vehicle = this._vehicleRepository.findByImei(imei);
-    if (vehicle === undefined) {
+    const hashable = await this._vehicleRepository.findByImei(imei);
+    if (hashable === undefined) {
       this._logger.error("Vehicle not found", OnDisconnection.name);
 
       return undefined;
     }
+    const vehicle = hashable.value;
 
     if (
       ContainsIot.run(vehicle.model) === true &&
@@ -48,7 +44,7 @@ export class OnDisconnection implements OnDisconnectionInterface {
       vehicle.model.ioT.network.setConnectionModuleToDisconnected(imei);
     }
 
-    this._vehicleRepository.updateByImei(imei, vehicle.model);
+    await this._vehicleRepository.updateByImei(imei, vehicle.model, hashable.hash);
     this._imeiSocketIdRepository.delete(imei);
   }
 }

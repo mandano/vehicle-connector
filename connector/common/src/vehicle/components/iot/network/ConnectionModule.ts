@@ -1,63 +1,27 @@
-import { State } from "../../../State.ts";
+import State from "../../../State.ts";
 
-import { Imei } from "./protocol/Imei.ts";
+import type Imei from "./protocol/Imei.ts";
+import ConnectionState from "./ConnectionState.ts";
 
 export class ConnectionModule {
-  public static readonly CONNECTED = "connected";
-  public static readonly DISCONNECTED = "disconnected";
-
-  private readonly _imei: Imei;
-  private _state:
-    | State<
-        typeof ConnectionModule.CONNECTED | typeof ConnectionModule.DISCONNECTED
-      >
-    | undefined;
-  private _detectedProtocolVersion: State<string> | undefined;
-  private _setProtocolVersion: State<string> | undefined;
-  private _detectedProtocol: State<string> | undefined;
-  private _setProtocol: State<string> | undefined;
-
   constructor(
-    imei: Imei,
-    state:
-      | State<
-          | typeof ConnectionModule.CONNECTED
-          | typeof ConnectionModule.DISCONNECTED
-        >
-      | undefined = undefined,
-    detectedProtocolVersion: State<string> | undefined = undefined,
-    setProtocolVersion: State<string> | undefined = undefined,
-    detectedProtocol: State<string> | undefined = undefined,
-    setProtocol: State<string> | undefined = undefined
-  ) {
-    this._imei = imei;
-    this._state = state;
-    this._detectedProtocolVersion = detectedProtocolVersion;
-    this._setProtocolVersion = setProtocolVersion;
-    this._detectedProtocol = detectedProtocol;
-    this._setProtocol = setProtocol;
-  }
+    private readonly _imei: Imei,
+    private _state: ConnectionState | undefined = undefined,
+    private _detectedProtocolVersion: State<string> | undefined = undefined,
+    private _setProtocolVersion: State<string> | undefined = undefined,
+    private _detectedProtocol: State<string> | undefined = undefined,
+    private _setProtocol: State<string> | undefined = undefined,
+  ) {}
 
   get imei(): Imei {
     return this._imei;
   }
 
-  get state():
-    | State<
-        typeof ConnectionModule.CONNECTED | typeof ConnectionModule.DISCONNECTED
-      >
-    | undefined {
+  get state(): ConnectionState | undefined {
     return this._state;
   }
 
-  set state(
-    state:
-      | State<
-      | typeof ConnectionModule.CONNECTED
-      | typeof ConnectionModule.DISCONNECTED
-    >
-      | undefined,
-  ) {
+  set state(state: ConnectionState | undefined) {
     this._state = state;
   }
 
@@ -65,7 +29,9 @@ export class ConnectionModule {
     return this._detectedProtocolVersion;
   }
 
-  set detectedProtocolVersion(detectedProtocolVersion: State<string> | undefined) {
+  set detectedProtocolVersion(
+    detectedProtocolVersion: State<string> | undefined,
+  ) {
     this._detectedProtocolVersion = detectedProtocolVersion;
   }
 
@@ -74,8 +40,8 @@ export class ConnectionModule {
       return;
     }
 
-    this._state.state = ConnectionModule.CONNECTED;
-    this._state.originatedAt = new Date();
+    this._state.state.state = ConnectionState.CONNECTED;
+    this._state.state.originatedAt = new Date();
   }
 
   public setToDisconnected(): void {
@@ -83,8 +49,8 @@ export class ConnectionModule {
       return;
     }
 
-    this._state.state = ConnectionModule.DISCONNECTED;
-    this._state.originatedAt = new Date();
+    this._state.state.state = ConnectionState.DISCONNECTED;
+    this._state.state.originatedAt = new Date();
   }
 
   get setProtocolVersion(): State<string> | undefined {
@@ -111,3 +77,5 @@ export class ConnectionModule {
     this._detectedProtocol = detectedProtocol;
   }
 }
+
+export default ConnectionModule;

@@ -1,25 +1,23 @@
 import path from "node:path";
 
 import dotenv from "dotenv";
+import UpdateConnectionState from "common/src/vehicle/model/builders/update/components/connectionModule/UpdateConnectionState.ts";
+import UpdateConnectionModules from "common/src/vehicle/model/builders/update/components/connectionModule/UpdateConnectionModules.ts";
+import UpdateConnectionModule from "common/src/vehicle/model/builders/update/components/connectionModule/UpdateConnectionModule.ts";
+import CloneConnectionModule from "common/src/vehicle/components/iot/network/CloneConnectionModule.ts";
+import CloneState from "common/src/vehicle/model/CloneState.ts";
+import CloneConnectionState from "common/src/vehicle/components/iot/network/CloneConnectionState.ts";
+import ConnectionState from "common/src/vehicle/components/iot/network/ConnectionState.ts";
+import DtoContext from "common/src/vehicle/dto/_Context.ts";
+import VehicleValkeyRepository from "common/src/repositories/vehicle/valkey/VehicleValkeyRepository.ts";
+import ValkeyAdapter from "common/src/adapters/valkey/ValkeyAdapter.ts";
 
-import VehicleFileSystemRepository from "../../../common/src/repositories/VehicleFileSystemRepository.ts";
 import { WorkerQueue } from "../../../common/src/adapters/queue/rabbitMq/WorkerQueue.ts";
 import { Exchange } from "../../../common/src/adapters/queue/rabbitMq/Exchange.ts";
-import { VehicleToJsonVehicle } from "../../../common/src/vehicle/json/vehicleToJsonVehicle/VehicleToJsonVehicle.ts";
-import { Unknown as VehicleToJsonVehicleUnknown } from "../../../common/src/vehicle/json/vehicleToJsonVehicle/models/Unknown.ts";
-import { NetworkBuilder } from "../../../common/src/vehicle/json/vehicleToJsonVehicle/models/unknown/NetworkBuilder.ts";
-import { PositionBuilder } from "../../../common/src/vehicle/json/vehicleToJsonVehicle/models/unknown/PositionBuilder.ts";
-import { EnergyBuilder } from "../../../common/src/vehicle/json/vehicleToJsonVehicle/models/unknown/EnergyBuilder.ts";
-import { JsonVehicleToVehicle } from "../../../common/src/vehicle/json/jsonVehicleToVehicle/JsonVehicleToVehicle.ts";
-import { SetConnectionModules } from "../../../common/src/vehicle/json/jsonVehicleToVehicle/SetConnectionModules.ts";
-import { SetState } from "../../../common/src/vehicle/json/jsonVehicleToVehicle/SetState.ts";
-import { LockableScooter as JsonVehicleToVehicleLockableScooter } from "../../../common/src/vehicle/json/jsonVehicleToVehicle/models/LockableScooter.ts";
 import { SendActionRequest } from "../../../common/src/vehicle/model/actions/SendActionRequest.ts";
-import { Unknown as JsonVehicleToVehicleUnknown } from "../../../common/src/vehicle/json/jsonVehicleToVehicle/models/Unknown.ts";
 import { FileSystemAdapter } from "../../../common/src/adapters/FileSystemAdapter.ts";
 import { Logger } from "../../../common/src/logger/Logger.ts";
 import { LogLevels } from "../../../common/src/logger/LogLevels.ts";
-import { LockableScooter as VehicleToJsonVehicleLockableScooter } from "../../../common/src/vehicle/json/vehicleToJsonVehicle/models/LockableScooter.ts";
 import { Acknowledge } from "../../../common/src/vehicle/components/iot/network/protocol/Acknowledge.ts";
 import { ImeiSocketIdFileRepository } from "../../../common/src/repositories/ImeiSocketIdFileRepository.ts";
 import { Channel } from "../../../common/src/adapters/queue/rabbitMq/Channel.ts";
@@ -31,9 +29,8 @@ import { UpdateState } from "../../../common/src/vehicle/model/builders/update/c
 import { UpdateIoT } from "../../../common/src/vehicle/model/builders/update/components/UpdateIoT.ts";
 import { UpdateNetwork } from "../../../common/src/vehicle/model/builders/update/components/UpdateNetwork.ts";
 import { UpdatePosition } from "../../../common/src/vehicle/model/builders/update/components/UpdatePosition.ts";
-import { UpdateConnectionModules } from "../../../common/src/vehicle/model/builders/update/components/UpdateConnectionModules.ts";
 import { UpdateLockableScooter } from "../../../common/src/vehicle/model/builders/update/models/UpdateLockableScooter.ts";
-import { UpdateLock } from "../../../common/src/vehicle/model/builders/update/components/UpdateLock.ts";
+import { UpdateLockState } from "../../../common/src/vehicle/model/builders/update/components/UpdateLockState.ts";
 import { UpdateSpeedometer } from "../../../common/src/vehicle/model/builders/update/components/speedometer/UpdateSpeedometer.ts";
 import PathResolver from "../../../common/src/adapters/fileSystem/PathResolver.ts";
 
@@ -62,36 +59,23 @@ async function run() {
 
   const rabbitMqChannel = new Channel(context.rabbitMq, logger);
 
-  const fileSystemAdapter = new FileSystemAdapter(logger);
-  const vehicleRepository = new VehicleFileSystemRepository(
-    path.join(filesPathShared, "vehicles.json"),
-    fileSystemAdapter,
-    new VehicleToJsonVehicle(
-      new VehicleToJsonVehicleUnknown(
-        new NetworkBuilder(),
-        new PositionBuilder(),
-        new EnergyBuilder(),
-      ),
-      new VehicleToJsonVehicleLockableScooter(
-        new NetworkBuilder(),
-        new PositionBuilder(),
-        new EnergyBuilder(),
-      ),
-    ),
-    new JsonVehicleToVehicle(
-      new JsonVehicleToVehicleLockableScooter(
-        new SetConnectionModules(new SetState()),
-        new SetState(),
-        new SendActionRequest(
-          new WorkerQueue(rabbitMqChannel, "action_requests"),
-        ),
-      ),
-      new JsonVehicleToVehicleUnknown(
-        new SetConnectionModules(new SetState()),
-        new SetState(),
-      ),
-    ),
+  const dtoContext = new DtoContext(
+    new SendActionRequest(new WorkerQueue(rabbitMqChannel, "action_requests")),
   );
+
+  const vehicleRepository = new VehicleValkeyRepository(
+    new ValkeyAdapter(logger, {
+      host: process.env.VALKEY_HOST ?? "localhost",
+      port:  process.env.VALKEY_PORT ? parseInt(process.env.VALKEY_PORT) : 6379,
+    }),
+    logger,
+    dtoContext.objectToDto().objectToDto(),
+    dtoContext.dtoToVehicle().dtoToVehicle(),
+    dtoContext.vehicleToObject(),
+    dtoContext.dtoToObject(),
+  );
+
+  const fileSystemAdapter = new FileSystemAdapter(logger);
 
   const fromTcpInterface = new WorkerQueue(rabbitMqChannel, "fromTcpInterface");
 
@@ -113,7 +97,23 @@ async function run() {
   const createByMessageLineContext = context.createModelByMessageLineContext;
 
   const updateState = new UpdateState();
-  const updateConnectionModules = new UpdateConnectionModules(updateState);
+  const updateConnectionModules = new UpdateConnectionModules(
+    new UpdateConnectionModule(
+      updateState,
+      new UpdateConnectionState(
+        updateState,
+        new CloneConnectionState(new CloneState()),
+      ),
+    ),
+    new CloneConnectionModule(
+      new CloneConnectionState(
+        new CloneState<
+          typeof ConnectionState.CONNECTED | typeof ConnectionState.DISCONNECTED
+        >(),
+      ),
+      new CloneState<string>(),
+    ),
+  );
   const saveMessageLineContextToVehicle = new SaveVehicle(
     vehicleRepository,
     logger,
@@ -134,7 +134,7 @@ async function run() {
           new UpdateNetwork(updateConnectionModules),
           new UpdatePosition(updateState),
         ),
-        new UpdateLock(updateState),
+        new UpdateLockState(updateState),
         new UpdateSpeedometer(updateState),
       ),
     ),
@@ -171,7 +171,7 @@ async function run() {
               new UpdateNetwork(updateConnectionModules),
               new UpdatePosition(updateState),
             ),
-            new UpdateLock(updateState),
+            new UpdateLockState(updateState),
             new UpdateSpeedometer(updateState),
           ),
         ),

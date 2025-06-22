@@ -1,4 +1,5 @@
-import VehicleRepositoryInterface from "../../../../common/src/repositories/VehicleRepositoryInterface.ts";
+import VehicleRepositoryHashableInterface from "common/src/repositories/vehicle/VehicleRepositoryHashableInterface.ts";
+
 import LoggerInterface from "../../../../common/src/logger/LoggerInterface.ts";
 import SendAction from "../../../../common/src/vehicle/actions/SendAction.ts";
 import ActionStateFromJsonInterface from "../../../../common/src/vehicle/model/actions/json/ActionStateFromJsonInterface.ts";
@@ -9,25 +10,13 @@ import LockState from "../../../../common/src/vehicle/components/lock/LockState.
 import State from "../../../../common/src/vehicle/State.ts";
 
 export class ProcessActionRequest implements OnMessageInterfaceV2 {
-  private readonly _vehicleRepository: VehicleRepositoryInterface;
-  private readonly _sendAction: SendAction;
-  private readonly _logger: LoggerInterface;
-  private readonly _hashColoredLogger: HashColoredLoggerInterface;
-  private readonly _actionStateFromJson: ActionStateFromJsonInterface;
-
   constructor(
-    vehicleRepository: VehicleRepositoryInterface,
-    sendAction: SendAction,
-    logger: LoggerInterface,
-    actionRequestJsonConverter: ActionStateFromJsonInterface,
-    hashColoredLogger: HashColoredLoggerInterface,
-  ) {
-    this._vehicleRepository = vehicleRepository;
-    this._sendAction = sendAction;
-    this._logger = logger;
-    this._hashColoredLogger = hashColoredLogger;
-    this._actionStateFromJson = actionRequestJsonConverter;
-  }
+    private readonly _vehicleRepository: VehicleRepositoryHashableInterface,
+    private readonly _sendAction: SendAction,
+    private readonly _logger: LoggerInterface,
+    private readonly _hashColoredLogger: HashColoredLoggerInterface,
+    private readonly _actionStateFromJson: ActionStateFromJsonInterface,
+  ) {}
 
   public async run(actionRequestAsString: string): Promise<boolean> {
     this._logger.debug(
@@ -49,19 +38,19 @@ export class ProcessActionRequest implements OnMessageInterfaceV2 {
       ProcessActionRequest.name,
     );
 
-    const vehicle = this._vehicleRepository.findById(actionRequest.vehicleId);
+    const hashable = await this._vehicleRepository.findById(
+      actionRequest.vehicleId,
+    );
 
-    if (vehicle === undefined) {
+    if (hashable === undefined) {
       this._logger.warn("Vehicle not found", ProcessActionRequest.name);
 
       return false;
     }
+    const vehicle = hashable.value;
 
     if (!this.hasAttribute(vehicle.model, "ioT")) {
-      this._logger.warn(
-        "Vehicle does not have IoT",
-        ProcessActionRequest.name,
-      );
+      this._logger.warn("Vehicle does not have IoT", ProcessActionRequest.name);
 
       return false;
     }
@@ -136,10 +125,7 @@ export class ProcessActionRequest implements OnMessageInterfaceV2 {
     );
 
     if (publishedAction === undefined || publishedAction === false) {
-      this._logger.error(
-        "Failed to publish action",
-        ProcessActionRequest.name,
-      );
+      this._logger.error("Failed to publish action", ProcessActionRequest.name);
 
       return false;
     }

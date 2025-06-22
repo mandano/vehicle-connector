@@ -4,10 +4,12 @@ import LoggerInterface from "common/src/logger/LoggerInterface.ts";
 import Channel from "common/src/adapters/queue/rabbitMq/Channel.ts";
 import OnMessageInterfaceV2 from "common/src/adapters/queue/OnMessageInterfaceV2.ts";
 import Exchange from "common/src/adapters/queue/rabbitMq/Exchange.ts";
+import { ExchangeQueue } from "common/src/adapters/queue/rabbitMq/ExchangeQueue.ts";
+import VehicleRepositoryHashableInterface from "common/src/repositories/vehicle/VehicleRepositoryHashableInterface.ts";
+import ContainsIot from "common/src/vehicle/components/iot/ContainsIot.ts";
+import ContainsNetwork from "common/src/vehicle/components/iot/network/ContainsNetwork.ts";
 
 import { RouteInterface } from "../../RouteInterface.ts";
-import VehicleRepositoryInterface from "../../../../../common/src/repositories/VehicleRepositoryInterface.ts";
-import { ExchangeQueue } from "../../../../../common/src/adapters/queue/rabbitMq/ExchangeQueue.ts";
 import { Lock as LockComponent } from "../../../../../common/src/vehicle/components/lock/Lock.ts";
 import ContainsLockCheck from "../../../../../common/src/vehicle/components/lock/ContainsLockCheck.ts";
 
@@ -15,12 +17,12 @@ export class Unlock implements RouteInterface {
   private _path: string = "/vehicle/:id/unlock";
 
   public constructor(
-    private _vehicleRepository: VehicleRepositoryInterface,
-    private _channel: Channel,
-    private _handleResponse: OnMessageInterfaceV2,
-    private _exchange: Exchange,
-    private _applicationName: string,
-    private _logger: LoggerInterface,
+    private readonly _vehicleRepository: VehicleRepositoryHashableInterface,
+    private readonly _channel: Channel,
+    private readonly _handleResponse: OnMessageInterfaceV2,
+    private readonly _exchange: Exchange,
+    private readonly _applicationName: string,
+    private readonly _logger: LoggerInterface,
   ) {}
 
   public init(router: ExpressRouter) {
@@ -76,15 +78,24 @@ export class Unlock implements RouteInterface {
      *                   type: string
      *                   example: Vehicle not found
      *       422:
-     *         description: Vehicle does not support unlocking
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: object
-     *               properties:
-     *                 message:
-     *                   type: string
-     *                   example: Vehicle does not support unlocking
+     *          description: Vehicle does not support required functionality
+     *          content:
+     *            application/json:
+     *              schema:
+     *                type: object
+     *                properties:
+     *                  message:
+     *                    type: string
+     *              examples:
+     *                No unlock support:
+     *                  value:
+     *                    message: Vehicle does not support unlocking
+     *                No IoT support:
+     *                  value:
+     *                    message: Vehicle does not support IoT
+     *                No network support:
+     *                  value:
+     *                    message: Vehicle does not support network
      *       503:
      *         description: Service unavailable
      *         content:
@@ -101,6 +112,9 @@ export class Unlock implements RouteInterface {
      *               Unlock failed:
      *                 value:
      *                   message: Vehicle could not be unlocked. Response stated failed unlocking.
+     *               Vehicle is not connected:
+     *                 value:
+     *                   message: Vehicle is not connected
      */
     router.post(this._path, async (req: Request, res: Response) => {
       await this.run(req, res);
@@ -117,15 +131,41 @@ export class Unlock implements RouteInterface {
     }
 
     const vehicleId = parseInt(id);
-    const vehicle = this._vehicleRepository.findById(vehicleId);
+    const hashable = await this._vehicleRepository.findById(vehicleId);
+    const vehicle = hashable?.value;
 
     if (!vehicle) {
       res.status(404).json({ message: "Vehicle not found" });
       return;
     }
 
-    if (!ContainsLockCheck.run(vehicle.model)) {
+    if (
+      !ContainsLockCheck.run(vehicle.model) ||
+      !vehicle.model.lock.unlockingSupported()
+    ) {
       res.status(422).json({ message: "Vehicle does not support unlocking" });
+      return;
+    }
+
+    if (!ContainsIot.run(vehicle.model) || vehicle.model.ioT === undefined) {
+      res.status(422).json({ message: "Vehicle does not support IoT" });
+      return;
+    }
+
+    if (
+      !ContainsNetwork.run(vehicle.model.ioT) ||
+      vehicle.model.ioT.network === undefined
+    ) {
+      res.status(422).json({ message: "Vehicle does not support network" });
+      return;
+    }
+
+    if (!vehicle.model.ioT.network.isConnected()) {
+      this._logger.warn(
+        `Vehicle is not connected; vehicle id: ${vehicle.id}`,
+        Unlock.name,
+      );
+      res.status(503).json({ message: "Vehicle is not connected" });
       return;
     }
 

@@ -25,3 +25,5 @@ export class Battery {
     this._level.state = level.state;
   }
 }
+
+export default Battery;

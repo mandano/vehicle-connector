@@ -8,16 +8,18 @@
     "pipeline:github:rabbitmq:docker:up": "RABBITMQ_PORT=5672 RABBITMQ_MANAGEMENT_PORT=15672 docker compose -f ../../infrastructure/podman/testing/compose.yml -p test up -d rabbitmq",
     "pipeline:github:test:integration": "npm run pipeline:github:wait-for-rabbitmq && RABBITMQ_HOST=localhost NODE_DEBUG=test node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --test \"**/*.test.integration.ts\"",
     "pipeline:github:wait-for-rabbitmq": "RABBITMQ_HOST=localhost RABBITMQ_PORT=5672 node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' ../../infrastructure/scripts/rabbitMq/waitForRabbitMq.ts",
-    "pipeline:test:integration:without-docker": "npm run pipeline:wait-for-rabbitmq && RABBITMQ_HOST=connector_common_integration_tests-rabbitmq-1 NODE_DEBUG=test node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --test \"**/*.test.integration.ts\"",
+    "pipeline:test:integration:without-docker": "npm run pipeline:wait-for-rabbitmq && VALKEY_HOST=connector_common_integration_tests-valkey-1 RABBITMQ_HOST=connector_common_integration_tests-rabbitmq-1 NODE_DEBUG=test node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --test \"**/*.test.integration.ts\"",
     "pipeline:wait-for-rabbitmq": "RABBITMQ_HOST=connector_common_integration_tests-rabbitmq-1 RABBITMQ_PORT=5672 node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' ../../infrastructure/scripts/rabbitMq/waitForRabbitMq.ts",
     "test:integration:rabbitmq:docker:down": "docker compose -f ../../infrastructure/podman/testing/compose.yml -p connector_common_integration_tests down",
     "test:integration:rabbitmq:docker:up": "RABBITMQ_PORT=5677 RABBITMQ_MANAGEMENT_PORT=15677 docker compose -f ../../infrastructure/podman/testing/compose.yml -p connector_common_integration_tests up -d rabbitmq",
+    "test:integration:valkey:docker:up": "VALKEY_PORT=6379 docker compose -f ../../infrastructure/podman/testing/compose.yml -p connector_common_integration_tests up -d valkey",
     "test:integration:run": "npm run test:integration:rabbitmq:docker:up && npm run wait-for-rabbitmq && RABBITMQ_HOST=rabbitmq RABBITMQ_PORT=5677 NODE_DEBUG=test node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --test \"**/*.test.integration.ts\" && npm run test:integration:rabbitmq:docker:down",
     "test:unit:node-runner": "NODE_DEBUG=test node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --test \"**/*.test.ts\""
   },
   "dependencies": {
     "@faker-js/faker": "^9.7.0",
-    "amqplib": "^0.10.4"
+    "amqplib": "^0.10.4",
+    "iovalkey": "^0.3.2"
   },
   "devDependencies": {
     "ts-node": "^10.9.2"

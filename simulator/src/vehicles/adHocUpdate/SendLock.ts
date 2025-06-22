@@ -58,7 +58,7 @@ export class SendLock {
 
     const messageLine = this._lockToMessageLine.run(
       new TransferLock(
-        new LockState(vehicle.model.lock.state),
+        new LockState(vehicle.model.lock.state.state),
         trackingId,
         protocol.state,
         protocolVersion.state,

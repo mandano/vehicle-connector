@@ -1,13 +1,15 @@
 import { Request, Response, Router as ExpressRouter } from "express";
 import { v4 as uuidv4 } from "uuid";
-import LoggerInterface from "common/src/logger/LoggerInterface.js";
+import LoggerInterface from "common/src/logger/LoggerInterface.ts";
 import Channel from "common/src/adapters/queue/rabbitMq/Channel.ts";
 import OnMessageInterfaceV2 from "common/src/adapters/queue/OnMessageInterfaceV2.ts";
-import Exchange from "common/src/adapters/queue/rabbitMq/Exchange.js";
+import Exchange from "common/src/adapters/queue/rabbitMq/Exchange.ts";
+import { ExchangeQueue } from "common/src/adapters/queue/rabbitMq/ExchangeQueue.ts";
+import VehicleRepositoryHashableInterface from "common/src/repositories/vehicle/VehicleRepositoryHashableInterface.ts";
+import ContainsNetwork from "common/src/vehicle/components/iot/network/ContainsNetwork.ts";
+import ContainsIot from "common/src/vehicle/components/iot/ContainsIot.ts";
 
 import { RouteInterface } from "../../RouteInterface.ts";
-import VehicleRepositoryInterface from "../../../../../common/src/repositories/VehicleRepositoryInterface.ts";
-import { ExchangeQueue } from "../../../../../common/src/adapters/queue/rabbitMq/ExchangeQueue.ts";
 import { Lock as LockComponent } from "../../../../../common/src/vehicle/components/lock/Lock.ts";
 import ContainsLockCheck from "../../../../../common/src/vehicle/components/lock/ContainsLockCheck.ts";
 
@@ -15,7 +17,7 @@ export class Lock implements RouteInterface {
   private _path: string = "/vehicle/:id/lock";
 
   public constructor(
-    private _vehicleRepository: VehicleRepositoryInterface,
+    private _vehicleRepository: VehicleRepositoryHashableInterface,
     private _channel: Channel,
     private _handleResponse: OnMessageInterfaceV2,
     private _exchange: Exchange,
@@ -101,6 +103,9 @@ export class Lock implements RouteInterface {
      *               Lock failed:
      *                 value:
      *                   message: Vehicle could not be locked. Response stated failed locking.
+     *               Vehicle is not connected:
+     *                 value:
+     *                   message: Vehicle is not connected
      */
     router.post(this._path, async (req: Request, res: Response) => {
       await this.run(req, res);
@@ -117,7 +122,8 @@ export class Lock implements RouteInterface {
     }
 
     const vehicleId = parseInt(id);
-    const vehicle = this._vehicleRepository.findById(vehicleId);
+    const hashable = await this._vehicleRepository.findById(vehicleId);
+    const vehicle = hashable?.value;
 
     if (!vehicle) {
       res.status(404).json({ message: "Vehicle not found" });
@@ -126,9 +132,31 @@ export class Lock implements RouteInterface {
 
     if (
       !ContainsLockCheck.run(vehicle.model) ||
-      vehicle.model.lock === undefined
+      !vehicle.model.lock.lockingSupported()
     ) {
       res.status(422).json({ message: "Vehicle does not support locking" });
+      return;
+    }
+
+    if (!ContainsIot.run(vehicle.model) || vehicle.model.ioT === undefined) {
+      res.status(422).json({ message: "Vehicle does not support IoT" });
+      return;
+    }
+
+    if (
+      !ContainsNetwork.run(vehicle.model.ioT) ||
+      vehicle.model.ioT.network === undefined
+    ) {
+      res.status(422).json({ message: "Vehicle does not support network" });
+      return;
+    }
+
+    if (!vehicle.model.ioT.network.isConnected()) {
+      this._logger.warn(
+        `Vehicle is not connected; vehicle id: ${vehicle.id}`,
+        Lock.name,
+      );
+      res.status(503).json({ message: "Vehicle is not connected" });
       return;
     }
 
