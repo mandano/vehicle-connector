@@ -52,6 +52,16 @@ jobs:
           
           echo "rabbitUp=true" >> $GITHUB_ENV
 
+      - name: Up Valkey
+        if: env.SKIP != 'true'
+        run: |
+          set -euo pipefail
+          cd connector/common
+          npm run pipeline:github:valkey:docker:up
+          cd -
+          
+          echo "valkeyUp=true" >> $GITHUB_ENV
+
       - name: Install waitForRabbitMq dependencies (directly checking rabbit mq)
         if: env.SKIP != 'true'
         run: |
@@ -82,5 +92,12 @@ jobs:
         run: |
           cd connector/common
           npm run pipeline:github:rabbitmq:docker:down
+          cd -
+
+      - name: Down Valkey
+        if: env.valkeyUp == 'true'
+        run: |
+          cd connector/common
+          npm run pipeline:github:valkey:docker:down
           cd -
 
