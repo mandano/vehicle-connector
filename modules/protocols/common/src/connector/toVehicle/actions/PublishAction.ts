@@ -1,5 +1,5 @@
 import { TcpInterfaceMessage } from "../../../../../../../connector/common/src/entities/tcpInterfaceMessage/TcpInterfaceMessage.ts";
-import { ImeiSocketIdRepositoryInterface } from "../../../../../../../connector/common/src/repositories/ImeiSocketIdRepositoryInterface.ts";
+import ImeiSocketIdRepositoryInterface from "../../../../../../../connector/common/src/repositories/imeiSocketId/ImeiSocketIdRepositoryInterface.ts";
 import { TransferAction } from "../../../../../../../connector/common/src/vehicle/actions/TransferAction.ts";
 
 import { PublishTcpInterfaceMessage } from "./PublishTcpInterfaceMessage.ts";
@@ -14,7 +14,7 @@ export class PublishAction {
     action: TransferAction,
     messageLine: string,
   ): Promise<boolean> {
-    const socketId = this._imeiSocketIdRepository.getSocketId(action.imei);
+    const socketId = await this._imeiSocketIdRepository.getSocketIdInImeiKey(action.imei);
 
     if (socketId === undefined) {
       return false;

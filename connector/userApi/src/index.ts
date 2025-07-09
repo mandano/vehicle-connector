@@ -11,6 +11,8 @@ import { WorkerQueue } from "common/src/adapters/queue/rabbitMq/WorkerQueue.ts";
 import { Exchange } from "common/src/adapters/queue/rabbitMq/Exchange.ts";
 import { ActionStateFromJson } from "common/src/vehicle/model/actions/json/ActionStateFromJson.ts";
 import { Channel } from "common/src/adapters/queue/rabbitMq/Channel.ts";
+import ImeiSocketIdValkeyRepository from "common/src/repositories/imeiSocketId/ImeiSocketIdValkeyRepository.ts";
+import OrphanedSocketFileSystemRepository from "common/src/repositories/orphanedSocket/OrphanedSocketValkeyRepository.ts";
 
 import BaseContext from "../../common/src/context/BaseContext.ts";
 import RabbitMqConfig from "../../common/src/adapters/queue/rabbitMq/Config.ts";
@@ -30,6 +32,9 @@ import ModelsCreateGet from "./routes/v1/models/create/Get.ts";
 import { Queue } from "./routes/v1/health/Queue.ts";
 import IsConnected from "./routes/v1/vehicle/IsConnected.ts";
 import DtoContext from "./../../common/src/vehicle/dto/_Context.ts";
+import KeyValueStorage from "./routes/v1/health/KeyValueStorage.ts";
+import Count from "./routes/v1/sockets/Count.ts";
+import Orphaned from "./routes/v1/sockets/Orphaned.ts";
 
 const port = 3000;
 dotenv.config();
@@ -69,6 +74,21 @@ const handleLockResponseV2 = new HandleLockResponseV2(
   logger,
 );
 
+const valkeyAdapter = new ValkeyAdapter(logger, {
+  host: process.env.VALKEY_HOST ?? "localhost",
+  port: process.env.VALKEY_PORT ? parseInt(process.env.VALKEY_PORT) : 6379,
+});
+
+const imeiSocketIdRepository = new ImeiSocketIdValkeyRepository(
+  valkeyAdapter,
+  logger,
+);
+
+const orphanedSocketRepository = new OrphanedSocketFileSystemRepository(
+  valkeyAdapter,
+  logger,
+);
+
 const server = new HttpExpressServer(
   port,
   express(),
@@ -99,6 +119,9 @@ const server = new HttpExpressServer(
     new ModelsCreateGet(),
     new CreateVehicle(vehicleRepository),
     new IsConnected(vehicleRepository, logger),
+    new KeyValueStorage(valkeyAdapter),
+    new Count(imeiSocketIdRepository),
+    new Orphaned(orphanedSocketRepository),
   ]),
   logger,
 );

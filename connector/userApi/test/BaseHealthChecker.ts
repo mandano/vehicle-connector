@@ -1,7 +1,10 @@
-export default class HealthChecker {
-  private static readonly SUB_URL = "/api/v1/health/queue";
+import HealthCheckerInterface from "./HealthCheckerInterface.ts";
 
-  constructor(private _baseUrl: string) {}
+export default abstract class BaseHealthChecker implements HealthCheckerInterface {
+  protected readonly abstract _subUrl: string;
+  protected readonly abstract _serviceName: string;
+
+  protected constructor(private _baseUrl: string) {}
 
   public async waitFor(timeoutInMilliseconds: number): Promise<boolean> {
     if (timeoutInMilliseconds < 0) {
@@ -25,18 +28,29 @@ export default class HealthChecker {
 
   private async isHealthy(): Promise<boolean> {
     try {
-      const response = await fetch(`${this._baseUrl}${HealthChecker.SUB_URL}`);
+      const response = await fetch(`${this._baseUrl}${this._subUrl}`);
       if (!response.ok) {
+        console.log(`Service ${this._serviceName} is not healthy, status: ${response.status}`)
+
         return false;
       }
       // const data = await response.json();
+      console.log(`Service ${this._serviceName} is healthy.`);
       return true;
     } catch (error: unknown) {
       console.error(
-        "Error fetching data:",
+        `Service ${this._serviceName}, error fetching data:`,
         error instanceof Error ? error.message : error,
       );
       return false;
     }
+  }
+
+  get serviceName(): string {
+    return this._serviceName;
+  }
+
+  get url(): string {
+    return `${this._baseUrl}${this._subUrl}`;
   }
 }

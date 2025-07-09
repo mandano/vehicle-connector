@@ -1,21 +1,18 @@
-import path from "node:path";
-
 import dotenv from "dotenv";
+import ValkeyAdapter from "common/src/adapters/valkey/ValkeyAdapter.ts";
 
-import { OrphanedSocketFileSystemRepository } from "../../common/src/repositories/OrphanedSocketFileSystemRepository.ts";
+import OrphanedSocketFileSystemRepository from "../../common/src/repositories/orphanedSocket/OrphanedSocketValkeyRepository.ts";
 import { LogLevels } from "../../common/src/logger/LogLevels.ts";
 import { Logger } from "../../common/src/logger/Logger.ts";
-import { FileSystemAdapter } from "../../common/src/adapters/FileSystemAdapter.ts";
 import { WorkerQueue } from "../../common/src/adapters/queue/rabbitMq/WorkerQueue.ts";
 import { ExchangeQueue } from "../../common/src/adapters/queue/rabbitMq/ExchangeQueue.ts";
 import { Exchange } from "../../common/src/adapters/queue/rabbitMq/Exchange.ts";
-import { ImeiSocketIdFileRepository } from "../../common/src/repositories/ImeiSocketIdFileRepository.ts";
+import ImeiSocketIdRepository from "../../common/src/repositories/imeiSocketId/ImeiSocketIdValkeyRepository.ts";
 import { Channel } from "../../common/src/adapters/queue/rabbitMq/Channel.ts";
 import { TcpInterfaceMessageJsonConverter } from "../../common/src/entities/tcpInterfaceMessage/TcpInterfaceMessageJsonConverter.ts";
 import { HashColoredLogger } from "../../common/src/logger/HashColoredLogger.ts";
 import BaseContext from "../../common/src/context/BaseContext.ts";
 import RabbitMqConfig from "../../common/src/adapters/queue/rabbitMq/Config.ts";
-import PathResolver from "../../common/src/adapters/fileSystem/PathResolver.ts";
 
 import { Sockets } from "./socket/Sockets.ts";
 import { OnData } from "./socket/from/onEventsHandler/OnData.ts";
@@ -33,19 +30,15 @@ const config = new Config();
 const tcpHost = process.env.TCP_HOST || "localhost";
 const logger = new Logger(LogLevels.DEBUG_LEVEL);
 const hashColoredLogger = new HashColoredLogger(LogLevels.DEBUG_LEVEL);
-const fileSystemAdapter = new FileSystemAdapter(logger);
-const pathResolver = new PathResolver();
-const filesPathPrivate = pathResolver.run(
-  process.env.FILES_PATH_PRIVATE || "tmp",
-);
-const filesPathShared = pathResolver.run(
-  process.env.FILES_PATH_SHARED || "tmp",
-);
+
+const valkeyAdapter = new ValkeyAdapter(logger, {
+  host: process.env.VALKEY_HOST ?? "localhost",
+  port: process.env.VALKEY_PORT ? parseInt(process.env.VALKEY_PORT) : 6379,
+});
 
 const orphanedSocketRepository = new OrphanedSocketFileSystemRepository(
-  path.join(filesPathPrivate, "orphanedSockets.json"),
-  config.applicationName,
-  fileSystemAdapter,
+  valkeyAdapter,
+  logger,
 );
 const sockets = new Sockets();
 const rabbitMqPort = process.env.RABBITMQ_PORT
@@ -59,16 +52,17 @@ const rabbitMqChannel = new Channel(context.rabbitMq, logger);
 
 const fromTcpInterface = new WorkerQueue(rabbitMqChannel, "fromTcpInterface");
 
-const imeiSocketIdRepository = new ImeiSocketIdFileRepository(
-  path.join(filesPathShared, "imeiSocketIdLinks.json"),
-  fileSystemAdapter,
+// keep for later use
+const imeiSocketIdRepository = new ImeiSocketIdRepository(
+  valkeyAdapter,
+  logger,
 );
+void imeiSocketIdRepository;
 
 const onDisconnection = new OnDisconnection(
   orphanedSocketRepository,
   sockets,
   fromTcpInterface,
-  imeiSocketIdRepository,
   new TcpInterfaceMessageJsonConverter(logger),
 );
 
@@ -91,6 +85,7 @@ async function start() {
       sockets,
       fromTcpInterface,
       new TcpInterfaceMessageJsonConverter(logger),
+      config.applicationName
     ),
     onDisconnection,
     new OnData(

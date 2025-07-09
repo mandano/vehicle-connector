@@ -76,6 +76,21 @@ export default class ValkeyAdapter implements ValkeyAdapterInterface {
     return result > 0;
   }
 
+  async multiDel(keys: string[]): Promise<boolean> {
+    let result: number;
+    try {
+      result = await this._client.del(keys);
+    } catch (error) {
+      this._logger.error(
+        `Error deleting keys ${keys} from Valkey:`,
+        error instanceof Error ? error.message : String(error),
+      );
+      return false;
+    }
+
+    return result === keys.length;
+  }
+
   public async scan(pattern: string): Promise<string[]> {
     let cursor = "0";
     let keys: string[] = [];
@@ -166,5 +181,19 @@ export default class ValkeyAdapter implements ValkeyAdapterInterface {
     }
 
     return multi;
+  }
+
+  public async isConnected(): Promise<boolean> {
+    let response: "PONG" | undefined;
+
+    try {
+      response = await this._client.ping();
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error)
+
+      this._logger.error(errorMsg, ValkeyAdapter.name);
+    }
+
+    return response === 'PONG';
   }
 }

@@ -1,6 +1,7 @@
+import OrphanedSocketRepositoryInterface from "common/src/repositories/orphanedSocket/OrphanedSocketRepositoryInterface.ts";
+
 import { BaseCleanup } from "../../common/src/BaseCleanup.ts";
 import { LoggerInterface } from "../../common/src/logger/LoggerInterface.ts";
-import { OrphanedSocketFileSystemRepository } from "../../common/src/repositories/OrphanedSocketFileSystemRepository.ts";
 
 import { Sockets } from "./socket/Sockets.ts";
 import { OnDisconnectionInterface } from "./socket/from/onEventsHandler/OnDisconnectionInterface.ts";
@@ -9,7 +10,7 @@ export class Cleanup extends BaseCleanup {
   constructor(
     process: NodeJS.Process,
     logger: LoggerInterface,
-    private readonly _orphanedSocketRepository: OrphanedSocketFileSystemRepository,
+    private readonly _orphanedSocketRepository: OrphanedSocketRepositoryInterface,
     private readonly _sockets: Sockets,
     private readonly _onDisconnection: OnDisconnectionInterface,
   ) {
@@ -24,7 +25,7 @@ export class Cleanup extends BaseCleanup {
     }
 
     try {
-      this._orphanedSocketRepository.deleteAll();
+      await this._orphanedSocketRepository.deleteAll();
     } catch (error) {
       this._logger.error(`Error during cleanup: ${error}`);
       process.exit(1);

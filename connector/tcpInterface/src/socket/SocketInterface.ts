@@ -5,3 +5,5 @@ export interface SocketInterface {
     onData(onData: (data: Buffer) => void): void;
     get remoteAddress(): string | undefined;
 }
+
+export default SocketInterface;

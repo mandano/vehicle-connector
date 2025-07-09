@@ -9,6 +9,8 @@ export interface ValkeyAdapterInterface {
       value: unknown;
     }[],
   ): Promise<boolean>;
+  multiDel(keys: string[]): Promise<boolean>;
+  isConnected(): Promise<boolean>
 }
 
 export default ValkeyAdapterInterface;
