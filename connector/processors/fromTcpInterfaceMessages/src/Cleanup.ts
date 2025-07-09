@@ -1,6 +1,6 @@
 import { BaseCleanup } from "../../../common/src/BaseCleanup.ts";
 import { LoggerInterface } from "../../../common/src/logger/LoggerInterface.ts";
-import { ImeiSocketIdRepositoryInterface } from "../../../common/src/repositories/ImeiSocketIdRepositoryInterface.ts";
+import ImeiSocketIdRepositoryInterface from "../../../common/src/repositories/imeiSocketId/ImeiSocketIdRepositoryInterface.ts";
 
 export class Cleanup extends BaseCleanup {
   constructor(
@@ -11,11 +11,11 @@ export class Cleanup extends BaseCleanup {
     super(process, logger);
   }
 
-  public cleanup(): Promise<void> {
+  public async cleanup(): Promise<void> {
     this._logger.log(`Cleaning up...`);
 
     try {
-      this._imeiSocketIdRepository.deleteAll();
+      await this._imeiSocketIdRepository.deleteAll();
     } catch (error) {
       this._logger.error(`Error during cleanup: ${error}`);
       process.exit(1);

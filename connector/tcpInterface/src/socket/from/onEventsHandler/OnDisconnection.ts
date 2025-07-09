@@ -1,34 +1,18 @@
-import { OrphanedSocketRepositoryInterface } from "../../../../../common/src/repositories/OrphanedSocketRepositoryInterface.ts";
+import OrphanedSocketRepositoryInterface from "../../../../../common/src/repositories/orphanedSocket/OrphanedSocketRepositoryInterface.ts";
 import { Sockets } from "../../Sockets.ts";
 import { WorkerQueue } from "../../../../../common/src/adapters/queue/rabbitMq/WorkerQueue.ts";
 import { TcpInterfaceMessage } from "../../../../../common/src/entities/tcpInterfaceMessage/TcpInterfaceMessage.ts";
-import { ImeiSocketIdFileRepository } from "../../../../../common/src/repositories/ImeiSocketIdFileRepository.ts";
-import {
-  TcpInterfaceMessageJsonConverterInterface
-} from "../../../../../common/src/entities/tcpInterfaceMessage/TcpInterfaceMessageJsonConverterInterface.ts";
+import { TcpInterfaceMessageJsonConverterInterface } from "../../../../../common/src/entities/tcpInterfaceMessage/TcpInterfaceMessageJsonConverterInterface.ts";
 
 import { OnDisconnectionInterface } from "./OnDisconnectionInterface.ts";
 
 export class OnDisconnection implements OnDisconnectionInterface {
-  private orphanedSocketRepository: OrphanedSocketRepositoryInterface;
-  private sockets: Sockets;
-  private _fromTcpInterface: WorkerQueue;
-  private _imeiSocketIdRepository: ImeiSocketIdFileRepository;
-  private _tcpInterfaceMessageJsonConverter: TcpInterfaceMessageJsonConverterInterface;
-
   constructor(
-    orphanedSocketRepository: OrphanedSocketRepositoryInterface,
-    sockets: Sockets,
-    fromTcpInterface: WorkerQueue,
-    imeiSocketIdRepository: ImeiSocketIdFileRepository,
-    tcpInterfaceMessageJsonConverter: TcpInterfaceMessageJsonConverterInterface,
-  ) {
-    this.orphanedSocketRepository = orphanedSocketRepository;
-    this.sockets = sockets;
-    this._fromTcpInterface = fromTcpInterface;
-    this._imeiSocketIdRepository = imeiSocketIdRepository;
-    this._tcpInterfaceMessageJsonConverter = tcpInterfaceMessageJsonConverter;
-  }
+    private readonly _orphanedSocketRepository: OrphanedSocketRepositoryInterface,
+    private readonly _sockets: Sockets,
+    private readonly _fromTcpInterface: WorkerQueue,
+    private readonly _tcpInterfaceMessageJsonConverter: TcpInterfaceMessageJsonConverterInterface,
+  ) {}
 
   public async run(socketId: string): Promise<void> {
     const fromTcpInterfaceMessage = new TcpInterfaceMessage(
@@ -37,9 +21,11 @@ export class OnDisconnection implements OnDisconnectionInterface {
       "",
     );
 
-    await this._fromTcpInterface.send(this._tcpInterfaceMessageJsonConverter.toJson(fromTcpInterfaceMessage));
-    this.orphanedSocketRepository.deleteBySocketCount(socketId);
-    this.sockets.delete(socketId);
-    this._imeiSocketIdRepository.deleteBySocketId(socketId);
+    await this._fromTcpInterface.send(
+      this._tcpInterfaceMessageJsonConverter.toJson(fromTcpInterfaceMessage),
+    );
+
+    await this._orphanedSocketRepository.deleteBySocketId(socketId);
+    this._sockets.delete(socketId);
   }
 }

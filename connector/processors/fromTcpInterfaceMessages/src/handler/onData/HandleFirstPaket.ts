@@ -1,5 +1,7 @@
+import OrphanedSocketRepositoryInterface from "common/src/repositories/orphanedSocket/OrphanedSocketRepositoryInterface.ts";
+
 import { MessageLineContext } from "../../../../../common/src/vehicle/components/iot/network/protocol/messageLineContext/MessageLineContext.ts";
-import { ImeiSocketIdRepositoryInterface } from "../../../../../common/src/repositories/ImeiSocketIdRepositoryInterface.ts";
+import ImeiSocketIdRepositoryInterface from "../../../../../common/src/repositories/imeiSocketId/ImeiSocketIdRepositoryInterface.ts";
 import { CreateByMessageLineContextInterface } from "../../../../../../modules/protocols/common/src/connector/fromVehicle/models/CreateByMessageLineContextInterface.ts";
 import { AcknowledgeInterface } from "../../../../../common/src/vehicle/components/iot/network/protocol/AcknowledgeInterface.ts";
 import { LoggerInterface } from "../../../../../common/src/logger/LoggerInterface.ts";
@@ -20,6 +22,7 @@ export class HandleFirstPaket implements HandleFirstPaketInterface {
     private readonly _acknowledge: AcknowledgeInterface,
     private readonly _logger: LoggerInterface,
     private readonly _createMessageLineContext: CreateMessageLineContextInterface,
+    private readonly _orphanedSocketRepository: OrphanedSocketRepositoryInterface,
   ) {}
 
   public async run(messageLine: string, socketId: string): Promise<void> {
@@ -39,10 +42,7 @@ export class HandleFirstPaket implements HandleFirstPaketInterface {
       return;
     }
 
-    // in case already existed, this should not be the case in the first place
-    // add debugging logs here
-    this._imeiSocketIdRepository.delete(imei);
-    this._imeiSocketIdRepository.create(imei, socketId);
+    await this._imeiSocketIdRepository.create(imei, socketId);
 
     const vehicleModelByPaket =
       this._createModelByPaket.run(messageLineContext);
@@ -61,6 +61,10 @@ export class HandleFirstPaket implements HandleFirstPaketInterface {
     }
 
     const vehicleId = await this._saveVehicle.run(vehicleModelByPaket, imei);
+
+    if (vehicleId !== undefined) {
+      await this._orphanedSocketRepository.deleteBySocketId(socketId);
+    }
 
     if (
       vehicleModelByPaket?.lock?.state !== undefined &&

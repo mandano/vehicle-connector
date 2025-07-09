@@ -4,9 +4,9 @@ import assert from "node:assert/strict";
 import VehicleValkeyRepository from "common/src/repositories/vehicle/valkey/VehicleValkeyRepository.ts";
 import { anything, instance, mock, when } from "ts-mockito";
 import Hashable from "common/src/entities/Hashable.ts";
+import ImeiSocketIdValkeyRepository from "common/src/repositories/imeiSocketId/ImeiSocketIdValkeyRepository.ts";
 
 import { OnDisconnection } from "../../../src/handler/OnDisconnection.ts";
-import { FakeImeiSocketIdFileRepository } from "../../../../../common/test/repositories/FakeImeiSocketIdFileRepository.ts";
 import { FakeLogger } from "../../../../../common/test/logger/FakeLogger.ts";
 import { TcpInterfaceMessage } from "../../../../../common/src/entities/tcpInterfaceMessage/TcpInterfaceMessage.ts";
 import { Vehicle } from "../../../../../common/src/vehicle/Vehicle.ts";
@@ -18,16 +18,17 @@ import { IoT } from "../../../../../common/src/vehicle/components/iot/IoT.ts";
 describe("OnDisconnection", () => {
   it("should return undefined and log error if imei is not found", async () => {
     const logger = new FakeLogger();
-    const imeiSocketIdFileRepository = new FakeImeiSocketIdFileRepository({
-      getImeiReturnValue: undefined,
-    });
 
     const mockedVehicleRepository = mock(VehicleValkeyRepository);
     when(mockedVehicleRepository.findByImei(anything())).thenResolve(undefined);
     const vehicleRepository = instance(mockedVehicleRepository);
 
+    const mockedImeiSocketIdValkeyRepository = mock(ImeiSocketIdValkeyRepository);
+    when(mockedImeiSocketIdValkeyRepository.getImeiInSocketIdKey(anything())).thenResolve(undefined)
+    const imeiSocketIdValkeyRepository = instance(mockedImeiSocketIdValkeyRepository);
+
     const onDisconnection = new OnDisconnection(
-      imeiSocketIdFileRepository,
+      imeiSocketIdValkeyRepository,
       vehicleRepository,
       logger,
     );
@@ -48,16 +49,17 @@ describe("OnDisconnection", () => {
 
   it("should return undefined and log error if vehicle is not found", async () => {
     const logger = new FakeLogger();
-    const imeiSocketIdFileRepository = new FakeImeiSocketIdFileRepository({
-      getImeiReturnValue: "imei123",
-    });
 
     const mockedVehicleRepository = mock(VehicleValkeyRepository);
     when(mockedVehicleRepository.findByImei(anything())).thenResolve(undefined);
     const vehicleRepository = instance(mockedVehicleRepository);
 
+    const mockedImeiSocketIdValkeyRepository = mock(ImeiSocketIdValkeyRepository);
+    when(mockedImeiSocketIdValkeyRepository.getImeiInSocketIdKey(anything())).thenResolve("imei123")
+    const imeiSocketIdValkeyRepository = instance(mockedImeiSocketIdValkeyRepository);
+
     const onDisconnection = new OnDisconnection(
-      imeiSocketIdFileRepository,
+      imeiSocketIdValkeyRepository,
       vehicleRepository,
       logger,
     );
@@ -77,13 +79,16 @@ describe("OnDisconnection", () => {
   });
 
   it("should update vehicle and delete imei on successful disconnection", async () => {
-    //no actual test here, updateByImei and delete are tested separately
+    // TODO: no actual test here, updateByImei and delete are tested separately
     const imei = "imei123";
 
     const logger = new FakeLogger();
-    const imeiSocketIdFileRepository = new FakeImeiSocketIdFileRepository({
-      getImeiReturnValue: imei,
-    });
+
+    const mockedImeiSocketIdValkeyRepository = mock(ImeiSocketIdValkeyRepository);
+    when(mockedImeiSocketIdValkeyRepository.getImeiInSocketIdKey(anything())).thenResolve(imei)
+    when(mockedImeiSocketIdValkeyRepository.delete(anything())).thenResolve(true);
+
+    const imeiSocketIdValkeyRepository = instance(mockedImeiSocketIdValkeyRepository);
 
     const mockedVehicleRepository = mock(VehicleValkeyRepository);
     when(mockedVehicleRepository.findByImei(anything())).thenResolve(
@@ -99,10 +104,11 @@ describe("OnDisconnection", () => {
         ),
       ),
     );
+    when(mockedVehicleRepository.updateByImei(anything(), anything(), anything())).thenResolve(true);
     const vehicleRepository = instance(mockedVehicleRepository);
 
     const onDisconnection = new OnDisconnection(
-      imeiSocketIdFileRepository,
+      imeiSocketIdValkeyRepository,
       vehicleRepository,
       logger,
     );

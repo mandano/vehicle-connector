@@ -53,4 +53,26 @@ describe("ValkeyAdapter", () => {
     assert.ok(keys.includes(testKey));
     await adapter.del(testKey);
   });
+
+  it("should delete multiple keys at once", async () => {
+    const testKey1 = "test:key1";
+    const testKey2 = "test:key2";
+    const testKey3 = "test:key3";
+    const testKeys = [testKey1, testKey2, testKey3];
+
+    await adapter.set(testKey1, testValue);
+    await adapter.set(testKey2, testValue);
+    await adapter.set(testKey3, testValue);
+
+    const delResult = await adapter.multiDel(testKeys);
+    assert.equal(delResult, true);
+
+    const getResult1 = await adapter.get(testKey1);
+    const getResult2 = await adapter.get(testKey2);
+    const getResult3 = await adapter.get(testKey3);
+
+    assert.equal(getResult1, undefined);
+    assert.equal(getResult2, undefined);
+    assert.equal(getResult3, undefined);
+  });
 });

@@ -33,7 +33,7 @@ export class ProcessFromTcpInterfaceMessage implements OnMessageInterface {
     } else if (
       fromTcpInterfaceMessage.type === TcpInterfaceMessage.onDisconnection
     ) {
-      this._onDisconnection.run(fromTcpInterfaceMessage);
+      await this._onDisconnection.run(fromTcpInterfaceMessage);
     }
     return undefined;
   }

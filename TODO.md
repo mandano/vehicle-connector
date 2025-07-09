@@ -30,9 +30,10 @@
 - [ ] 60 % test coverage
 - [ ] polish connector codebase
 - [ ] polish simulator codebase
+- [ ] handle redis disconnect correctly
 
 ## In Progress
-- [ ] replace tmp file based vehicle repository by redis based repositry
+- [ ] replace tmp file based vehicle repository by valkey based repository
 
 # Version 0.1.0
 

@@ -1,5 +1,3 @@
-import path from "node:path";
-
 import dotenv from "dotenv";
 import UpdateConnectionState from "common/src/vehicle/model/builders/update/components/connectionModule/UpdateConnectionState.ts";
 import UpdateConnectionModules from "common/src/vehicle/model/builders/update/components/connectionModule/UpdateConnectionModules.ts";
@@ -11,15 +9,15 @@ import ConnectionState from "common/src/vehicle/components/iot/network/Connectio
 import DtoContext from "common/src/vehicle/dto/_Context.ts";
 import VehicleValkeyRepository from "common/src/repositories/vehicle/valkey/VehicleValkeyRepository.ts";
 import ValkeyAdapter from "common/src/adapters/valkey/ValkeyAdapter.ts";
+import OrphanedSocketFileSystemRepository from "common/src/repositories/orphanedSocket/OrphanedSocketValkeyRepository.ts";
 
 import { WorkerQueue } from "../../../common/src/adapters/queue/rabbitMq/WorkerQueue.ts";
 import { Exchange } from "../../../common/src/adapters/queue/rabbitMq/Exchange.ts";
 import { SendActionRequest } from "../../../common/src/vehicle/model/actions/SendActionRequest.ts";
-import { FileSystemAdapter } from "../../../common/src/adapters/FileSystemAdapter.ts";
 import { Logger } from "../../../common/src/logger/Logger.ts";
 import { LogLevels } from "../../../common/src/logger/LogLevels.ts";
 import { Acknowledge } from "../../../common/src/vehicle/components/iot/network/protocol/Acknowledge.ts";
-import { ImeiSocketIdFileRepository } from "../../../common/src/repositories/ImeiSocketIdFileRepository.ts";
+import ImeiSocketIdRepository from "../../../common/src/repositories/imeiSocketId/ImeiSocketIdValkeyRepository.ts";
 import { Channel } from "../../../common/src/adapters/queue/rabbitMq/Channel.ts";
 import { TcpInterfaceMessageJsonConverter } from "../../../common/src/entities/tcpInterfaceMessage/TcpInterfaceMessageJsonConverter.ts";
 import { Update } from "../../../common/src/vehicle/model/builders/update/Update.ts";
@@ -32,7 +30,6 @@ import { UpdatePosition } from "../../../common/src/vehicle/model/builders/updat
 import { UpdateLockableScooter } from "../../../common/src/vehicle/model/builders/update/models/UpdateLockableScooter.ts";
 import { UpdateLockState } from "../../../common/src/vehicle/model/builders/update/components/UpdateLockState.ts";
 import { UpdateSpeedometer } from "../../../common/src/vehicle/model/builders/update/components/speedometer/UpdateSpeedometer.ts";
-import PathResolver from "../../../common/src/adapters/fileSystem/PathResolver.ts";
 
 import { Cleanup } from "./Cleanup.ts";
 import { HandleFirstPaket } from "./handler/onData/HandleFirstPaket.ts";
@@ -51,31 +48,25 @@ async function run() {
   const logger = new Logger(LogLevels.DEBUG_LEVEL);
 
   const context = await loadContext();
-
-  const pathResolver = new PathResolver();
-  const filesPathShared = pathResolver.run(
-    process.env.FILES_PATH_SHARED || "tmp",
-  );
-
   const rabbitMqChannel = new Channel(context.rabbitMq, logger);
 
   const dtoContext = new DtoContext(
     new SendActionRequest(new WorkerQueue(rabbitMqChannel, "action_requests")),
   );
 
+  const valkeyAdapter = new ValkeyAdapter(logger, {
+    host: process.env.VALKEY_HOST ?? "localhost",
+    port: process.env.VALKEY_PORT ? parseInt(process.env.VALKEY_PORT) : 6379,
+  });
+
   const vehicleRepository = new VehicleValkeyRepository(
-    new ValkeyAdapter(logger, {
-      host: process.env.VALKEY_HOST ?? "localhost",
-      port:  process.env.VALKEY_PORT ? parseInt(process.env.VALKEY_PORT) : 6379,
-    }),
+    valkeyAdapter,
     logger,
     dtoContext.objectToDto().objectToDto(),
     dtoContext.dtoToVehicle().dtoToVehicle(),
     dtoContext.vehicleToObject(),
     dtoContext.dtoToObject(),
   );
-
-  const fileSystemAdapter = new FileSystemAdapter(logger);
 
   const fromTcpInterface = new WorkerQueue(rabbitMqChannel, "fromTcpInterface");
 
@@ -89,9 +80,9 @@ async function run() {
   const handleLockAttribute = new ForwardToActionResponses(
     new Exchange(rabbitMqChannel, "action_responses", logger),
   );
-  const imeiSocketIdRepository = new ImeiSocketIdFileRepository(
-    path.join(filesPathShared, "imeiSocketIdLinks.json"),
-    fileSystemAdapter,
+  const imeiSocketIdRepository = new ImeiSocketIdRepository(
+    valkeyAdapter,
+    logger,
   );
 
   const createByMessageLineContext = context.createModelByMessageLineContext;
@@ -140,6 +131,11 @@ async function run() {
     ),
   );
 
+  const orphanedSocketRepository = new OrphanedSocketFileSystemRepository(
+    valkeyAdapter,
+    logger,
+  );
+
   const onData = new OnData(
     new HandleFirstPaket(
       imeiSocketIdRepository,
@@ -149,6 +145,7 @@ async function run() {
       acknowledge,
       logger,
       context.createMessageLineContext,
+      orphanedSocketRepository,
     ),
     new HandleNotFirstPaket(
       vehicleRepository,

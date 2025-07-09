@@ -11,6 +11,9 @@ export class SwaggerConfig {
     "./src/routes/v1/models/create/Get.ts",
     "./src/routes/v1/vehicle/Create.ts",
     "./src/routes/v1/vehicle/IsConnected.ts",
+    "./src/routes/v1/health/KeyValueStorage.ts",
+    "./src/routes/v1/sockets/Count.ts",
+    "./src/routes/v1/sockets/Orphaned.ts"
   ];
 
   constructor(port: number) {

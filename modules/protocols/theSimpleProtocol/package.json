@@ -17,7 +17,7 @@
     "local:test:acceptance:podman:up": "VALKEY_PORT=6380 RABBITMQ_PORT=5676 RABBITMQ_MANAGEMENT_PORT=15676 INTERNAL=true TCP_PORT=1236 USER_API_PORT=3456 podman-compose -f ../../../infrastructure/podman/testing/compose.yml -p the_simple_protocol_acceptance_tests up -d",
     "local:test:acceptance:podman:down": "podman-compose -f ../../../infrastructure/podman/testing/compose.yml -p the_simple_protocol_acceptance_tests down --volumes",
     "test:unit:node-runner": "NODE_DEBUG=test node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' --test \"**/*.test.ts\"",
-    "user-api-wait-for-rabbitmq": "USER_API_RABBIT_MQ_TIMEOUT=60000 node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' ../../../infrastructure/scripts/userApi/waitForRabbitMq.ts"
+    "user-api-wait-for-rabbitmq": "USER_API_RABBIT_MQ_TIMEOUT=60000 node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' ../../../infrastructure/scripts/userApi/wait.ts"
   },
   "engines": {
     "node": "^22"

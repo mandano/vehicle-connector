@@ -1,7 +1,7 @@
 import VehicleRepositoryHashableInterface from "common/src/repositories/vehicle/VehicleRepositoryHashableInterface.ts";
 
 import { TcpInterfaceMessage } from "../../../../common/src/entities/tcpInterfaceMessage/TcpInterfaceMessage.ts";
-import { ImeiSocketIdRepositoryInterface } from "../../../../common/src/repositories/ImeiSocketIdRepositoryInterface.ts";
+import ImeiSocketIdRepositoryInterface from "../../../../common/src/repositories/imeiSocketId/ImeiSocketIdRepositoryInterface.ts";
 import { LoggerInterface } from "../../../../common/src/logger/LoggerInterface.ts";
 import ContainsIot from "../../../../common/src/vehicle/components/iot/ContainsIot.ts";
 import ContainsNetwork from "../../../../common/src/vehicle/components/iot/network/ContainsNetwork.ts";
@@ -19,7 +19,7 @@ export class OnDisconnection implements OnDisconnectionInterface {
     tcpInterfaceMessage: TcpInterfaceMessage,
   ): Promise<boolean | undefined> {
     const socketId = tcpInterfaceMessage.socketId;
-    const imei = this._imeiSocketIdRepository.getImei(socketId);
+    const imei = await this._imeiSocketIdRepository.getImeiInSocketIdKey(socketId);
 
     if (imei === undefined) {
       this._logger.error("Imei not found", OnDisconnection.name);
@@ -45,6 +45,6 @@ export class OnDisconnection implements OnDisconnectionInterface {
     }
 
     await this._vehicleRepository.updateByImei(imei, vehicle.model, hashable.hash);
-    this._imeiSocketIdRepository.delete(imei);
+    await this._imeiSocketIdRepository.delete(imei);
   }
 }
