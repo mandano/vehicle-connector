@@ -1,6 +1,6 @@
 import React from "react";
 
-import VehiclePopupProps from "../../types/VehiclePopupProps";
+import VehiclePopupProps from "../../types/vehicles/VehiclePopupProps";
 
 const VehiclePopup: React.FC<VehiclePopupProps> = ({ vehicle }) => {
   const getTimeBasedStyle = (

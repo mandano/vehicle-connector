@@ -10,6 +10,9 @@ import { EnergyLevelInterface } from "../../components/energy/EnergyLevelInterfa
 import { Odometer } from "../../components/odometer/Odometer.ts";
 import { ContainsOdometerInterface } from "../../components/odometer/ContainsOdometerInterface.ts";
 
+/**
+ * name misleading, lock can be undefined
+ */
 export class LockableScooter
   implements
     ContainsLockInterface,
@@ -19,22 +22,13 @@ export class LockableScooter
     ContainsOdometerInterface,
     EnergyLevelInterface
 {
-  private _batteries?: Batteries;
-  private _ioT?: IoT;
-  private _lock: Lock;
-  private _speedometer?: Speedometer;
-
   constructor(
-    lock: Lock,
-    energy?: Batteries,
-    ioT?: IoT,
-    speedometer?: Speedometer,
+    private _lock?: Lock,
+    private _batteries?: Batteries,
+    private _ioT?: IoT,
+    private _speedometer?: Speedometer,
     private _odometer?: Odometer,
   ) {
-    this._batteries = energy;
-    this._ioT = ioT;
-    this._lock = lock;
-    this._speedometer = speedometer;
   }
 
   get batteries(): Batteries | undefined {
@@ -53,7 +47,7 @@ export class LockableScooter
     this._ioT = ioT;
   }
 
-  get lock(): Lock {
+  get lock(): Lock | undefined {
     return this._lock;
   }
 

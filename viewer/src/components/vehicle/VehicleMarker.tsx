@@ -2,8 +2,8 @@ import React from "react";
 import { Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 
-import Vehicle from "../../types/Vehicle";
-import VehicleMarkerProps from "../../types/VehicleMarkerProps";
+import Vehicle from "../../types/vehicles/Vehicle";
+import VehicleMarkerProps from "../../types/vehicles/VehicleMarkerProps";
 
 import VehiclePopup from "./VehiclePopup";
 

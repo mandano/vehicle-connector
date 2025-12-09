@@ -1,13 +1,20 @@
 import fs from "fs";
 
+import { HttpExpressServer } from "userapi/src/HttpExpressServer.ts";
+import express, { Router as ExpressRouter } from "express";
+import bodyParser from "body-parser";
+import { Router } from "userapi/src/routes/v1/Router.ts";
+import SwaggerSpecsFactory from "userapi/src/SwaggerSpecsFactory.ts";
+import { SwaggerConfig as SwaggerConfigV1 } from "userapi/src/routes/v1/SwaggerConfig.ts";
+import { Logger } from "common/src/logger/Logger.ts";
+import { LogLevels } from "common/src/logger/LogLevels.ts";
+import { WorkerQueue } from "common/src/adapters/queue/rabbitMq/WorkerQueue.ts";
+import { RabbitMqConnection } from "common/src/adapters/queue/rabbitMq/RabbitMqConnection.ts";
+import { Channel } from "common/src/adapters/queue/rabbitMq/Channel.ts";
+import { HashColoredLogger } from "common/src/logger/HashColoredLogger.ts";
+
 import dotenv from "dotenv";
 
-import { Logger } from "../../connector/common/src/logger/Logger.ts";
-import { LogLevels } from "../../connector/common/src/logger/LogLevels.ts";
-import { WorkerQueue } from "../../connector/common/src/adapters/queue/rabbitMq/WorkerQueue.ts";
-import { RabbitMqConnection } from "../../connector/common/src/adapters/queue/rabbitMq/RabbitMqConnection.ts";
-import { Channel } from "../../connector/common/src/adapters/queue/rabbitMq/Channel.ts";
-import { HashColoredLogger } from "../../connector/common/src/logger/HashColoredLogger.ts";
 import CreateLockableScooter from "../../connector/common/src/vehicle/model/builders/create/lockableScooter/CreateLockableScooter.ts";
 
 import ManageReservations from "./reservations/manage/Manage.ts";
@@ -34,6 +41,7 @@ import loadContext from "./bootstrap/loadContext.ts";
 import Add from "./reservations/manage/Add.ts";
 import Remove from "./reservations/manage/Remove.ts";
 import ChangeModelType from "./vehicles/ChangeModelType.ts";
+import v1ReservationsGet from "./api/routes/v1/reservations/Get.ts";
 
 async function run() {
   dotenv.config();
@@ -100,12 +108,9 @@ async function run() {
         reservationsScenario.getRandomKickScooterRentalMileage(),
         0.5,
       ),
-      changeModelType
-    ),
-    new Remove(
-      logger,
       changeModelType,
     ),
+    new Remove(logger, changeModelType),
   );
 
   manageReservations.run().then((r) => console.log(r));
@@ -125,6 +130,20 @@ async function run() {
     new OnMessage(vehicles, new AdHocUpdateJsonConverter(logger)),
   );
   vehicleAdHocUpdatePublisher.run().then();
+
+  const port = 3003;
+  const swaggerSpecs = SwaggerSpecsFactory.create(new SwaggerConfigV1(port));
+
+  const server = new HttpExpressServer(
+    port,
+    express(),
+    swaggerSpecs,
+    bodyParser.json(),
+    new Router(ExpressRouter(), [new v1ReservationsGet(manageReservations)]),
+    logger,
+  );
+  server.init();
+  server.listen();
 }
 
 run().then();

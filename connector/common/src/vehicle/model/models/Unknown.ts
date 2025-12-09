@@ -13,23 +13,13 @@ export class Unknown
     ContainsSpeedometerInterface,
     EnergyLevelInterface
 {
-  private _batteries?: Batteries;
-  private _ioT?: IoT;
-  private _lock?: Lock;
-  private readonly _speedometer?: Speedometer;
-
   constructor(
-    batteries?: Batteries | undefined,
-    iot?: IoT,
-    lock?: Lock,
-    speedometer?: Speedometer,
+    private _batteries?: Batteries,
+    private _ioT?: IoT,
+    private _lock?: Lock,
+    private readonly _speedometer?: Speedometer,
     private _odometer?: Odometer,
-  ) {
-    this._batteries = batteries;
-    this._ioT = iot;
-    this._lock = lock;
-    this._speedometer = speedometer;
-  }
+  ) {}
 
   get batteries(): Batteries | undefined {
     return this._batteries;

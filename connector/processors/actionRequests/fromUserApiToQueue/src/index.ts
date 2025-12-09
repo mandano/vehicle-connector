@@ -33,6 +33,7 @@ async function run() {
 
   const dtoContext = new DtoContext(
     new SendActionRequest(new WorkerQueue(rabbitMqChannel, "action_requests")),
+    logger
   );
 
   const valkeyAdapter = new ValkeyAdapter(logger, {

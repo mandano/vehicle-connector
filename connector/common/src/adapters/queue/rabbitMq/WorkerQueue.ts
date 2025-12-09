@@ -1,3 +1,6 @@
+// TODO: do use abstracted class, to not depend on amqplib
+import { Options } from "amqplib";
+
 import { WorkerQueueInterface } from "../WorkerQueueInterface.ts";
 import { OnMessageInterface } from "../OnMessageInterface.ts";
 import { OnMessageOnDemandInterface } from "../OnMessageOnDemandInterface.ts";
@@ -15,6 +18,7 @@ export class WorkerQueue implements WorkerQueueInterface {
     name: string,
     durable: boolean = false,
     ack: boolean = false,
+    private readonly _messageTtl?: number, // TTL in milliseconds
   ) {
     this._channel = channel;
     this._durable = durable;
@@ -23,16 +27,22 @@ export class WorkerQueue implements WorkerQueueInterface {
   }
 
   private async init(): Promise<boolean> {
-    const initiated  = await this._channel.init();
+    const initiated = await this._channel.init();
     const asserted = await this.assert();
 
     return initiated && asserted;
   }
 
   private async assert(): Promise<boolean> {
-    return await this._channel.assertQueue(this._name, {
+    const options: Options.AssertQueue = {
       durable: this._durable,
-    });
+    };
+
+    if (this._messageTtl !== undefined) {
+      options.messageTtl = this._messageTtl;
+    }
+
+    return await this._channel.assertQueue(this._name, options);
   }
 
   public async send(message: string): Promise<boolean> {

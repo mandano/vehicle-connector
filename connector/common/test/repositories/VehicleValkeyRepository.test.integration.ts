@@ -15,9 +15,13 @@ import LockState from "../../src/vehicle/components/lock/LockState.ts";
 import State from "../../src/vehicle/State.ts";
 import Lock from "../../src/vehicle/components/lock/Lock.ts";
 import LockableScooter from "../../src/vehicle/model/models/LockableScooter.ts";
+import ValkeyAdapterFake from "../adapters/valkey/ValkeyAdapterFake.ts";
+import ValkeyAdapterInterface from "../../src/adapters/valkey/ValkeyAdapterInterface.ts";
+import ContainsIot from "../../src/vehicle/components/iot/ContainsIot.ts";
+import ContainsNetwork from "../../src/vehicle/components/iot/network/ContainsNetwork.ts";
 
 describe("VehicleValkeyRepository", () => {
-  let adapter: ValkeyAdapter;
+  let adapter: ValkeyAdapterInterface;
   let repo: VehicleValkeyRepository;
   const logger = new FakeLogger();
   let dtoContext: DtoContext | undefined;
@@ -29,7 +33,7 @@ describe("VehicleValkeyRepository", () => {
     });
     await adapter.connect();
 
-    dtoContext = new DtoContext(new FakeSendActionRequest());
+    dtoContext = new DtoContext(new FakeSendActionRequest(), logger);
   });
 
   after(async () => {
@@ -438,5 +442,145 @@ describe("VehicleValkeyRepository", () => {
     const vehicleFound = await repo.findById(id);
 
     assert.ok(vehicleFound?.value.model instanceof LockableScooter);
+  });
+
+  /**
+   * Test if ioT is read correctly.
+   *
+   * Error message `Vehicle with IMEI ${imei} does not contain IoT`
+   * in HandleNotFirstPaket occurred even though db seems to contain ioT
+   * attribute.
+   */
+  it("can read ioT", async () => {
+    const fakeAdapter = new ValkeyAdapterFake();
+    dtoContext = new DtoContext(new FakeSendActionRequest(), logger);
+
+    const repo = new VehicleValkeyRepository(
+      fakeAdapter,
+      logger,
+      dtoContext.objectToDto().objectToDto(),
+      dtoContext.dtoToVehicle().dtoToVehicle(),
+      dtoContext.vehicleToObject(),
+      dtoContext?.dtoToObject()
+    );
+    const id = 1;
+    const store = {
+      "hash": "6d4b3c79c5d011c7216b6cc64c36fc411d2beffc3353b27967ed36884ef9e602",
+      "value": {
+        "id": 2,
+        "model": {
+          "lock": {
+            "state": {
+              "state": "locked",
+              "originatedAt": "2025-10-27T19:13:30.000Z",
+              "createdAt": "2025-09-13T10:12:53.649Z",
+              "updatedAt": "2025-10-27T19:13:30.811Z"
+            }
+          },
+          "batteries": {
+            "batteries": [
+              {
+                "level": {
+                  "state": 99,
+                  "originatedAt": "2025-10-27T19:13:30.000Z",
+                  "createdAt": "2025-09-13T10:12:53.648Z",
+                  "updatedAt": "2025-10-27T19:13:30.811Z"
+                },
+                "voltage": {
+                  "state": 36102,
+                  "originatedAt": "2025-10-27T19:13:30.000Z",
+                  "createdAt": "2025-09-13T10:12:53.648Z",
+                  "updatedAt": "2025-10-27T19:13:30.811Z"
+                }
+              }
+            ]
+          },
+          "ioT": {
+            "network": {
+              "connectionModules": [
+                {
+                  "imei": "359876054321098",
+                  "state": {
+                    "state": {
+                      "state": "connected",
+                      "originatedAt": "2025-10-27T19:13:30.810Z",
+                      "createdAt": "2025-10-27T19:03:17.446Z",
+                      "updatedAt": "2025-10-27T19:13:30.811Z"
+                    }
+                  },
+                  "detectedProtocolVersion": {
+                    "state": "EF8040",
+                    "originatedAt": "2025-10-27T19:13:30.000Z",
+                    "createdAt": "2025-10-27T19:03:17.446Z",
+                    "updatedAt": "2025-10-27T19:13:30.811Z"
+                  },
+                  "setProtocolVersion": {
+                    "state": "EF8040",
+                    "originatedAt": "2025-10-27T19:03:17.000Z",
+                    "createdAt": "2025-10-27T19:03:17.446Z"
+                  },
+                  "detectedProtocol": {
+                    "state": "ZK_SERIES_TRACK_AIR",
+                    "originatedAt": "2025-10-27T19:13:30.000Z",
+                    "createdAt": "2025-10-27T19:03:17.446Z",
+                    "updatedAt": "2025-10-27T19:13:30.811Z"
+                  },
+                  "setProtocol": {
+                    "state": "ZK_SERIES_TRACK_AIR",
+                    "originatedAt": "2025-10-27T19:03:17.000Z",
+                    "createdAt": "2025-10-27T19:03:17.446Z"
+                  }
+                }
+              ]
+            },
+            "position": {
+              "latitude": {
+                "state": 52.4765782,
+                "originatedAt": "2025-10-27T19:13:30.000Z",
+                "createdAt": "2025-10-27T19:03:17.446Z",
+                "updatedAt": "2025-10-27T19:13:30.811Z"
+              },
+              "longitude": {
+                "state": 13.4351637,
+                "originatedAt": "2025-10-27T19:13:30.000Z",
+                "createdAt": "2025-10-27T19:03:17.446Z",
+                "updatedAt": "2025-10-27T19:13:30.811Z"
+              },
+              "createdAt": "2025-10-27T19:03:17.446Z",
+              "accuracy": {
+                "state": 1,
+                "originatedAt": "2025-10-27T19:13:30.000Z",
+                "createdAt": "2025-10-27T19:03:17.446Z",
+                "updatedAt": "2025-10-27T19:13:30.811Z"
+              }
+            }
+          },
+          "speedometer": {
+            "state": {
+              "state": 0,
+              "originatedAt": "2025-10-27T19:13:30.000Z",
+              "createdAt": "2025-09-13T10:12:53.649Z",
+              "updatedAt": "2025-10-27T19:13:30.812Z"
+            }
+          },
+          "modelName": "LockableScooter"
+        },
+        "createdAt": "2025-09-13T10:12:53.649Z"
+      }
+    };
+    await fakeAdapter.set(`vehicle:${id}`, store);
+
+    const vehicleFound = await repo.findById(id);
+
+    if (
+      !ContainsIot.run(vehicleFound?.value.model) ||
+      vehicleFound?.value.model.ioT === undefined ||
+      !ContainsNetwork.run(vehicleFound?.value.model.ioT) ||
+      vehicleFound?.value.model.ioT.network === undefined
+    ) {
+      assert.fail(`Vehicle does not contain IoT`);
+    }
+
+    assert.ok("Can read IoT");
   });
 });

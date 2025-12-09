@@ -1,12 +1,13 @@
-import { Unknown } from "../../models/Unknown.ts";
+import Unknown from "../../models/Unknown.ts";
 import { types as modelTypes } from "../../models/types.ts";
-import { LockableScooter } from "../../models/LockableScooter.ts";
+import LockableScooter from "../../models/LockableScooter.ts";
 
-import { UpdateUnknown } from "./models/UpdateUnknown.ts";
-import { UpdateLockableScooter } from "./models/UpdateLockableScooter.ts";
-import { UpdateInterface } from "./UpdateInterface.ts";
+import UpdateUnknown from "./models/unknown/UpdateUnknown.ts";
+import UpdateLockableScooter from "./models/lockableScooter/UpdateLockableScooter.ts";
+import UpdateInterface from "./UpdateInterface.ts";
+import UpdateResult from "./UpdateResult.ts";
 
-export class Update implements UpdateInterface {
+export default class Update implements UpdateInterface {
   constructor(
     private _updateUnknown: UpdateUnknown,
     private _updateLockableScooter: UpdateLockableScooter,
@@ -15,20 +16,28 @@ export class Update implements UpdateInterface {
   public run(
     toBeUpdated: modelTypes,
     updateBy: modelTypes,
-  ): modelTypes | undefined {
+  ): UpdateResult | undefined {
     if (updateBy instanceof Unknown && toBeUpdated instanceof Unknown) {
-      return this._updateUnknown.run(toBeUpdated, updateBy);
+      const updateResult = this._updateUnknown.run(toBeUpdated, updateBy);
+
+      return new UpdateResult(updateResult.new, updateResult.changes);
     }
 
     if (
       (updateBy instanceof LockableScooter || updateBy instanceof Unknown) &&
       toBeUpdated instanceof LockableScooter
     ) {
-      return this._updateLockableScooter.run(toBeUpdated, updateBy);
+      const updateLockableScooterResult = this._updateLockableScooter.run(
+        toBeUpdated,
+        updateBy,
+      );
+
+      return new UpdateResult(
+        updateLockableScooterResult.new,
+        updateLockableScooterResult.changes,
+      );
     }
 
     return undefined;
   }
 }
-
-export default Update;

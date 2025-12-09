@@ -35,6 +35,7 @@ import DtoContext from "./../../common/src/vehicle/dto/_Context.ts";
 import KeyValueStorage from "./routes/v1/health/KeyValueStorage.ts";
 import Count from "./routes/v1/sockets/Count.ts";
 import Orphaned from "./routes/v1/sockets/Orphaned.ts";
+import SwaggerSpecsFactory from "./SwaggerSpecsFactory.ts";
 
 const port = 3000;
 dotenv.config();
@@ -53,6 +54,7 @@ const context = new BaseContext(rabbitMqConfig);
 const rabbitMqChannel = new Channel(context.rabbitMq, logger);
 const dtoContext = new DtoContext(
   new SendActionRequest(new WorkerQueue(rabbitMqChannel, "action_requests")),
+  logger
 );
 
 const vehicleRepository = new VehicleValkeyRepository(
@@ -89,10 +91,11 @@ const orphanedSocketRepository = new OrphanedSocketFileSystemRepository(
   logger,
 );
 
+const swaggerSpecs = SwaggerSpecsFactory.create(new SwaggerConfigV1(port));
 const server = new HttpExpressServer(
   port,
   express(),
-  new SwaggerConfigV1(port),
+  swaggerSpecs,
   bodyParser.json(),
   new Router(ExpressRouter(), [
     new Get(vehicleRepository),

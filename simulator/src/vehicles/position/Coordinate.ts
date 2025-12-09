@@ -19,3 +19,5 @@ export class Coordinate {
     return `${this._latitude},${this._longitude}`;
   }
 }
+
+export default Coordinate;

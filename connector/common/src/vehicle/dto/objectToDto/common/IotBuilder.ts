@@ -1,11 +1,13 @@
 import IotDto from "../../../components/iot/IotDto.ts";
 import IsIotDto from "../../../components/iot/IsIotDto.ts";
+import LoggerInterface from "../../../../logger/LoggerInterface.ts";
 
 import NetworkBuilder from "./NetworkBuilder.ts";
 import PositionBuilder from "./PositionBuilder.ts";
 
 export default class IotBuilder {
   constructor(
+    private readonly _logger: LoggerInterface,
     private readonly _networkBuilder: NetworkBuilder,
     private readonly _positionBuilder: PositionBuilder,
     private readonly _isIotDto: IsIotDto,
@@ -13,6 +15,8 @@ export default class IotBuilder {
 
   public build(ioT: unknown): IotDto | undefined {
     if (this._isIotDto.run(ioT) === false) {
+      this._logger.error("Invalid IoT object", IotBuilder.name);
+
       return undefined;
     }
 

@@ -5,13 +5,16 @@ import { mock, instance, when } from "ts-mockito";
 import { faker } from "@faker-js/faker";
 import { THE_SIMPLE_PROTOCOL } from "the-simple-protocol/src/Protocol.ts";
 
-import UpdateConnectionModules from "../../../../../../../src/vehicle/model/builders/update/components/connectionModule/UpdateConnectionModules.ts";
+import UpdateConnectionModules from "../../../../../../../src/vehicle/model/builders/update/components/connectionModules/UpdateConnectionModules.ts";
 import ConnectionModule from "../../../../../../../src/vehicle/components/iot/network/ConnectionModule.ts";
 import UpdateConnectionModule from "../../../../../../../src/vehicle/model/builders/update/components/connectionModule/UpdateConnectionModule.ts";
 import CloneConnectionModule from "../../../../../../../src/vehicle/components/iot/network/CloneConnectionModule.ts";
 import CreateConnectionModule from "../../../../../components/iot/network/CreateConnectionModule.ts";
 import ConnectionState from "../../../../../../../src/vehicle/components/iot/network/ConnectionState.ts";
 import State from "../../../../../../../src/vehicle/State.ts";
+import UpdateConnectionModuleResult from "../../../../../../../src/vehicle/model/builders/update/components/connectionModule/UpdateConnectionModuleResult.ts";
+import ConnectionModuleToChanges
+  from "../../../../../../../src/vehicle/model/builders/update/components/connectionModule/ConnectionModuleToChanges.ts";
 
 describe("UpdateConnectionModules", () => {
   let updateConnectionModules: UpdateConnectionModules;
@@ -24,6 +27,7 @@ describe("UpdateConnectionModules", () => {
     updateConnectionModules = new UpdateConnectionModules(
       instance(updateConnectionModule),
       instance(cloneConnectionModule),
+      new ConnectionModuleToChanges()
     );
   });
 
@@ -35,13 +39,16 @@ describe("UpdateConnectionModules", () => {
 
     when(cloneConnectionModule.run(updateBy[0])).thenReturn(moduleTemplate);
 
-    const connectionModules = updateConnectionModules.run(
+    const updateConnectionModulesResult = updateConnectionModules.run(
       toBeUpdated,
       updateBy,
     );
-    assert.strictEqual(connectionModules.length, 1);
-    assert.deepStrictEqual(connectionModules[0], moduleTemplate);
-    assert.notStrictEqual(connectionModules[1], moduleTemplate);
+    assert.strictEqual(updateConnectionModulesResult.new.length, 1);
+    assert.deepStrictEqual(
+      updateConnectionModulesResult.new[0],
+      moduleTemplate,
+    );
+    assert.notStrictEqual(updateConnectionModulesResult.new[1], moduleTemplate);
   });
 
   it("update existing module, two modules existing in total", () => {
@@ -53,7 +60,12 @@ describe("UpdateConnectionModules", () => {
       imei: anotherImei,
       state: new State<
         typeof ConnectionState.CONNECTED | typeof ConnectionState.DISCONNECTED
-      >(ConnectionState.DISCONNECTED, anotherModuleDate, undefined, anotherModuleDate),
+      >(
+        ConnectionState.DISCONNECTED,
+        anotherModuleDate,
+        undefined,
+        anotherModuleDate,
+      ),
       detectedProtocolVersion: new State<string>(
         "v0_1",
         anotherModuleDate,
@@ -90,7 +102,12 @@ describe("UpdateConnectionModules", () => {
       imei: imei,
       state: new State<
         typeof ConnectionState.CONNECTED | typeof ConnectionState.DISCONNECTED
-      >(ConnectionState.DISCONNECTED, updateByModuleDate, undefined, updateByModuleDate),
+      >(
+        ConnectionState.DISCONNECTED,
+        updateByModuleDate,
+        undefined,
+        updateByModuleDate,
+      ),
       detectedProtocolVersion: new State<string>(
         "v0_1",
         updateByModuleDate,
@@ -119,43 +136,57 @@ describe("UpdateConnectionModules", () => {
     const updateBy: ConnectionModule[] = [updateByModule];
 
     when(updateConnectionModule.run(toBeUpdated[0], updateBy[0])).thenReturn(
-      new CreateConnectionModule().run({
-        imei: imei,
-        state: new State<
-          typeof ConnectionState.CONNECTED | typeof ConnectionState.DISCONNECTED
-        >(ConnectionState.DISCONNECTED, updateByModuleDate, undefined, updateByModuleDate),
-        detectedProtocolVersion: new State<string>(
-          "v0_1",
-          updateByModuleDate,
-          undefined,
-          updateByModuleDate,
-        ),
-        setProtocolVersion: new State<string>(
-          "v0_1",
-          updateByModuleDate,
-          undefined,
-          updateByModuleDate,
-        ),
-        detectedProtocol: new State<string>(
-          THE_SIMPLE_PROTOCOL,
-          updateByModuleDate,
-          undefined,
-          updateByModuleDate,
-        ),
-        setProtocol: new State<string>(
-          THE_SIMPLE_PROTOCOL,
-          updateByModuleDate,
-          undefined,
-          updateByModuleDate,
-        ),
-      }),
+      new UpdateConnectionModuleResult(
+        new CreateConnectionModule().run({
+          imei: imei,
+          state: new State<
+            | typeof ConnectionState.CONNECTED
+            | typeof ConnectionState.DISCONNECTED
+          >(
+            ConnectionState.DISCONNECTED,
+            updateByModuleDate,
+            undefined,
+            updateByModuleDate,
+          ),
+          detectedProtocolVersion: new State<string>(
+            "v0_1",
+            updateByModuleDate,
+            undefined,
+            updateByModuleDate,
+          ),
+          setProtocolVersion: new State<string>(
+            "v0_1",
+            updateByModuleDate,
+            undefined,
+            updateByModuleDate,
+          ),
+          detectedProtocol: new State<string>(
+            THE_SIMPLE_PROTOCOL,
+            updateByModuleDate,
+            undefined,
+            updateByModuleDate,
+          ),
+          setProtocol: new State<string>(
+            THE_SIMPLE_PROTOCOL,
+            updateByModuleDate,
+            undefined,
+            updateByModuleDate,
+          ),
+        }),
+        undefined,
+      ),
     );
     when(cloneConnectionModule.run(toBeUpdated[1])).thenReturn(
       new CreateConnectionModule().run({
         imei: anotherImei,
         state: new State<
           typeof ConnectionState.CONNECTED | typeof ConnectionState.DISCONNECTED
-        >(ConnectionState.DISCONNECTED, anotherModuleDate, undefined, anotherModuleDate),
+        >(
+          ConnectionState.DISCONNECTED,
+          anotherModuleDate,
+          undefined,
+          anotherModuleDate,
+        ),
         detectedProtocolVersion: new State<string>(
           "v0_1",
           anotherModuleDate,
@@ -183,14 +214,20 @@ describe("UpdateConnectionModules", () => {
       }),
     );
 
-    const connectionModules = updateConnectionModules.run(
+    const updateConnectionModulesResult = updateConnectionModules.run(
       toBeUpdated,
       updateBy,
     );
 
-    assert.strictEqual(connectionModules.length, 2);
-    assert.deepStrictEqual(connectionModules[0], updateByModule);
-    assert.notStrictEqual(connectionModules[0], updateByModule);
-    assert.deepStrictEqual(connectionModules[1], toBeUpdated[1]);
+    assert.strictEqual(updateConnectionModulesResult.new.length, 2);
+    assert.deepStrictEqual(
+      updateConnectionModulesResult.new[0],
+      updateByModule,
+    );
+    assert.notStrictEqual(updateConnectionModulesResult.new[0], updateByModule);
+    assert.deepStrictEqual(
+      updateConnectionModulesResult.new[1],
+      toBeUpdated[1],
+    );
   });
 });

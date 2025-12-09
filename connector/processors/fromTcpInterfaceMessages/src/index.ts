@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
-import UpdateConnectionState from "common/src/vehicle/model/builders/update/components/connectionModule/UpdateConnectionState.ts";
-import UpdateConnectionModules from "common/src/vehicle/model/builders/update/components/connectionModule/UpdateConnectionModules.ts";
+import UpdateConnectionState from "common/src/vehicle/model/builders/update/components/connectionModule/state/UpdateConnectionState.ts";
+import UpdateConnectionModules from "common/src/vehicle/model/builders/update/components/connectionModules/UpdateConnectionModules.ts";
 import UpdateConnectionModule from "common/src/vehicle/model/builders/update/components/connectionModule/UpdateConnectionModule.ts";
 import CloneConnectionModule from "common/src/vehicle/components/iot/network/CloneConnectionModule.ts";
 import CloneState from "common/src/vehicle/model/CloneState.ts";
@@ -10,6 +10,38 @@ import DtoContext from "common/src/vehicle/dto/_Context.ts";
 import VehicleValkeyRepository from "common/src/repositories/vehicle/valkey/VehicleValkeyRepository.ts";
 import ValkeyAdapter from "common/src/adapters/valkey/ValkeyAdapter.ts";
 import OrphanedSocketFileSystemRepository from "common/src/repositories/orphanedSocket/OrphanedSocketValkeyRepository.ts";
+import ConnectionModuleToChanges from "common/src/vehicle/model/builders/update/components/connectionModule/ConnectionModuleToChanges.ts";
+import UpdateStateNoUndefined from "common/src/vehicle/model/builders/update/components/state/noUndefined/UpdateStateNoUndefined.ts";
+import ClonePosition from "common/src/vehicle/components/iot/position/ClonePosition.ts";
+import PositionToChanges from "common/src/vehicle/components/iot/position/PositionToChanges.ts";
+import NetworkToChanges from "common/src/vehicle/components/iot/network/NetworkToChanges.ts";
+import UpdateDetectedProtocol from "common/src/vehicle/model/builders/update/components/connectionModule/detectedProtocol/UpdateDetectedProtocol.ts";
+import UpdateSetProtocolVersion from "common/src/vehicle/model/builders/update/components/connectionModule/detectedProtocol/UpdateSetProtocolVersion.ts";
+import UpdateDetectedProtocolVersion from "common/src/vehicle/model/builders/update/components/connectionModule/detectedProtocol/UpdateDetectedProtocolVersion.ts";
+import UpdateSetProtocol from "common/src/vehicle/model/builders/update/components/connectionModule/detectedProtocol/UpdateSetProtocol.ts";
+import ConnectionStates from "common/src/vehicle/components/iot/network/connectionModule/connectionState/ConnectionStates.ts";
+import UpdateBatteries from "common/src/vehicle/model/builders/update/components/energy/batteries/UpdateBatteries.ts";
+import UpdatePosition from "common/src/vehicle/model/builders/update/components/position/UpdatePosition.ts";
+import UpdateBattery from "common/src/vehicle/model/builders/update/components/energy/batteries/battery/UpdateBattery.ts";
+import UpdateVoltage from "common/src/vehicle/model/builders/update/components/energy/batteries/battery/voltage/UpdateVoltage.ts";
+import StateToChanges from "common/src/vehicle/model/builders/update/components/state/StateToChanges.ts";
+import CloneBattery from "common/src/vehicle/model/builders/update/components/energy/batteries/battery/CloneBattery.ts";
+import BatteryToChanges from "common/src/vehicle/model/builders/update/components/energy/batteries/battery/BatteryToChanges.ts";
+import CloneBatteries from "common/src/vehicle/model/builders/update/components/energy/batteries/CloneBatteries.ts";
+import BatteriesToChanges from "common/src/vehicle/model/builders/update/components/energy/batteries/BatteriesToChanges.ts";
+import UpdateLock from "common/src/vehicle/model/builders/update/components/lock/UpdateLock.ts";
+import LockStateToChanges from "common/src/vehicle/components/lock/LockStateToChanges.ts";
+import CloneLockState from "common/src/vehicle/components/lock/CloneLockState.ts";
+import CloneIoT from "common/src/vehicle/components/iot/CloneIoT.ts";
+import IotToChanges from "common/src/vehicle/model/builders/update/components/ioT/IotToChanges.ts";
+import CloneNetwork from "common/src/vehicle/components/iot/network/CloneNetwork.ts";
+import CloneConnectionModules from "common/src/vehicle/components/iot/network/CloneConnectionModules.ts";
+import PublishChanges from "common/src/vehicle/model/builders/update/publish/PublishChanges.ts";
+import UpdateState from "common/src/vehicle/model/builders/update/components/state/UpdateState.ts";
+import CloneStateExt from "common/src/vehicle/model/CloneStateExt.ts";
+import ToBeUpdatedOriginatedAtUndefined from "common/src/vehicle/model/builders/update/components/state/noUndefined/ToBeUpdatedOriginatedAtUndefined.ts";
+import OriginatedAtUndefined from "common/src/vehicle/model/builders/update/components/state/noUndefined/OriginatedAtUndefined.ts";
+import UpdateNoUndefined from "common/src/vehicle/model/builders/update/components/state/noUndefined/Update.ts";
 
 import { WorkerQueue } from "../../../common/src/adapters/queue/rabbitMq/WorkerQueue.ts";
 import { Exchange } from "../../../common/src/adapters/queue/rabbitMq/Exchange.ts";
@@ -20,16 +52,13 @@ import { Acknowledge } from "../../../common/src/vehicle/components/iot/network/
 import ImeiSocketIdRepository from "../../../common/src/repositories/imeiSocketId/ImeiSocketIdValkeyRepository.ts";
 import { Channel } from "../../../common/src/adapters/queue/rabbitMq/Channel.ts";
 import { TcpInterfaceMessageJsonConverter } from "../../../common/src/entities/tcpInterfaceMessage/TcpInterfaceMessageJsonConverter.ts";
-import { Update } from "../../../common/src/vehicle/model/builders/update/Update.ts";
-import { UpdateUnknown } from "../../../common/src/vehicle/model/builders/update/models/UpdateUnknown.ts";
-import { UpdateEnergy } from "../../../common/src/vehicle/model/builders/update/components/UpdateEnergy.ts";
-import { UpdateState } from "../../../common/src/vehicle/model/builders/update/components/UpdateState.ts";
-import { UpdateIoT } from "../../../common/src/vehicle/model/builders/update/components/UpdateIoT.ts";
-import { UpdateNetwork } from "../../../common/src/vehicle/model/builders/update/components/UpdateNetwork.ts";
-import { UpdatePosition } from "../../../common/src/vehicle/model/builders/update/components/UpdatePosition.ts";
-import { UpdateLockableScooter } from "../../../common/src/vehicle/model/builders/update/models/UpdateLockableScooter.ts";
-import { UpdateLockState } from "../../../common/src/vehicle/model/builders/update/components/UpdateLockState.ts";
-import { UpdateSpeedometer } from "../../../common/src/vehicle/model/builders/update/components/speedometer/UpdateSpeedometer.ts";
+import Update from "../../../common/src/vehicle/model/builders/update/Update.ts";
+import UpdateUnknown from "../../../common/src/vehicle/model/builders/update/models/unknown/UpdateUnknown.ts";
+import UpdateIoT from "../../../common/src/vehicle/model/builders/update/components/ioT/UpdateIoT.ts";
+import UpdateNetwork from "../../../common/src/vehicle/model/builders/update/components/network/UpdateNetwork.ts";
+import UpdateLockableScooter from "../../../common/src/vehicle/model/builders/update/models/lockableScooter/UpdateLockableScooter.ts";
+import UpdateLockState from "../../../common/src/vehicle/model/builders/update/components/lock/UpdateLockState.ts";
+import UpdateSpeedometer from "../../../common/src/vehicle/model/builders/update/components/speedometer/UpdateSpeedometer.ts";
 
 import { Cleanup } from "./Cleanup.ts";
 import { HandleFirstPaket } from "./handler/onData/HandleFirstPaket.ts";
@@ -52,6 +81,7 @@ async function run() {
 
   const dtoContext = new DtoContext(
     new SendActionRequest(new WorkerQueue(rabbitMqChannel, "action_requests")),
+    logger,
   );
 
   const valkeyAdapter = new ValkeyAdapter(logger, {
@@ -69,6 +99,13 @@ async function run() {
   );
 
   const fromTcpInterface = new WorkerQueue(rabbitMqChannel, "fromTcpInterface");
+  const vehicleUpdateChanges = new WorkerQueue(
+    rabbitMqChannel,
+    "vehicleUpdateChanges",
+    false,
+    false,
+    360000,
+  );
 
   const exchange = new Exchange(rabbitMqChannel, "toTcpInterface", logger);
 
@@ -86,15 +123,22 @@ async function run() {
   );
 
   const createByMessageLineContext = context.createModelByMessageLineContext;
+  const updateStateNoUndefined = new UpdateStateNoUndefined(
+    new ToBeUpdatedOriginatedAtUndefined(),
+    new OriginatedAtUndefined(),
+    new UpdateNoUndefined(),
+  );
 
-  const updateState = new UpdateState();
   const updateConnectionModules = new UpdateConnectionModules(
     new UpdateConnectionModule(
-      updateState,
       new UpdateConnectionState(
-        updateState,
-        new CloneConnectionState(new CloneState()),
+        updateStateNoUndefined,
+        new CloneConnectionState(new CloneState<ConnectionStates>()),
       ),
+      new UpdateDetectedProtocol(updateStateNoUndefined),
+      new UpdateDetectedProtocolVersion(updateStateNoUndefined),
+      new UpdateSetProtocolVersion(),
+      new UpdateSetProtocol(),
     ),
     new CloneConnectionModule(
       new CloneConnectionState(
@@ -104,31 +148,95 @@ async function run() {
       ),
       new CloneState<string>(),
     ),
+    new ConnectionModuleToChanges(),
+  );
+  const clonePosition = new ClonePosition();
+  const updateState = new UpdateState(
+    updateStateNoUndefined,
+    new StateToChanges(),
+    new CloneStateExt(),
+  );
+  const updateIoT = new UpdateIoT(
+    new UpdateNetwork(
+      updateConnectionModules,
+      new NetworkToChanges(),
+      new CloneNetwork(
+        new CloneConnectionModules(
+          new CloneConnectionModule(
+            new CloneConnectionState(new CloneState<ConnectionStates>()),
+            new CloneState<ConnectionStates>(),
+          ),
+        ),
+      ),
+    ),
+    new UpdatePosition(
+      updateState,
+      new ClonePosition(),
+      new PositionToChanges(),
+    ),
+    new CloneIoT(
+      clonePosition,
+      new CloneNetwork(
+        new CloneConnectionModules(
+          new CloneConnectionModule(
+            new CloneConnectionState(new CloneState<ConnectionStates>()),
+            new CloneState<string>(),
+          ),
+        ),
+      ),
+    ),
+    new IotToChanges(),
+  );
+
+  const updateBatteries = new UpdateBatteries(
+    new UpdateBattery(
+      updateStateNoUndefined,
+      new UpdateVoltage(updateStateNoUndefined, new StateToChanges()),
+      new BatteryToChanges(),
+    ),
+    new CloneBatteries(new CloneBattery()),
+    new BatteriesToChanges(),
+  );
+
+  const stateToChanges = new StateToChanges();
+  const cloneLockState = new CloneLockState(new CloneState<string>());
+  const lockStateToChanges = new LockStateToChanges(stateToChanges);
+  const updateLockState = new UpdateLockState(
+    updateStateNoUndefined,
+    cloneLockState,
+    lockStateToChanges,
+  );
+  const updateLock = new UpdateLock(
+    updateLockState,
+    cloneLockState,
+    lockStateToChanges,
+  );
+  const updateSpeedometer = new UpdateSpeedometer(
+    updateStateNoUndefined,
+    stateToChanges,
+    new CloneState<number>(),
+  );
+  const update = new Update(
+    new UpdateUnknown(updateBatteries, updateIoT),
+    new UpdateLockableScooter(
+      updateBatteries,
+      updateIoT,
+      updateLock,
+      updateSpeedometer,
+    ),
+  );
+
+  const updateVehicle = new UpdateVehicle(
+    vehicleRepository,
+    logger,
+    update,
+    new PublishChanges(vehicleUpdateChanges),
   );
   const saveMessageLineContextToVehicle = new SaveVehicle(
     vehicleRepository,
     logger,
     true,
-    new Update(
-      new UpdateUnknown(
-        new UpdateEnergy(updateState),
-        updateConnectionModules,
-        new UpdateIoT(
-          new UpdateNetwork(updateConnectionModules),
-          new UpdatePosition(updateState),
-        ),
-      ),
-      new UpdateLockableScooter(
-        new UpdateEnergy(updateState),
-        updateConnectionModules,
-        new UpdateIoT(
-          new UpdateNetwork(updateConnectionModules),
-          new UpdatePosition(updateState),
-        ),
-        new UpdateLockState(updateState),
-        new UpdateSpeedometer(updateState),
-      ),
-    ),
+    updateVehicle,
   );
 
   const orphanedSocketRepository = new OrphanedSocketFileSystemRepository(
@@ -149,30 +257,7 @@ async function run() {
     ),
     new HandleNotFirstPaket(
       vehicleRepository,
-      new UpdateVehicle(
-        vehicleRepository,
-        logger,
-        new Update(
-          new UpdateUnknown(
-            new UpdateEnergy(updateState),
-            updateConnectionModules,
-            new UpdateIoT(
-              new UpdateNetwork(updateConnectionModules),
-              new UpdatePosition(updateState),
-            ),
-          ),
-          new UpdateLockableScooter(
-            new UpdateEnergy(updateState),
-            updateConnectionModules,
-            new UpdateIoT(
-              new UpdateNetwork(updateConnectionModules),
-              new UpdatePosition(updateState),
-            ),
-            new UpdateLockState(updateState),
-            new UpdateSpeedometer(updateState),
-          ),
-        ),
-      ),
+      updateVehicle,
       context.createMessageLineContextByProtocolAndVersion,
       createByMessageLineContext,
       handleLockAttribute,

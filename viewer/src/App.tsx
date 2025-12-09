@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
-import VehicleMap from "./components/Map";
 import "./App.css";
+import Map from "./components/vehicles/Map";
 
 const App: React.FC = () => {
   const [time, setTime] = useState<string>(new Date().toUTCString());
@@ -29,7 +29,7 @@ const App: React.FC = () => {
           <div style={{ fontSize: "1rem" }}>{time}</div>
         </div>
       </header>
-      <VehicleMap />
+      <Map />
     </div>
   );
 };

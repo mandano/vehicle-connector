@@ -9,6 +9,7 @@ import IsNetworkDto from "../../components/iot/network/IsNetworkDto.ts";
 import IsNumberStateDto from "../../components/state/IsNumberStateDto.ts";
 import IsOdometerDto from "../../components/odometer/IsOdometerDto.ts";
 import IsSpeedometerDto from "../../components/speedometer/IsSpeedometerDto.ts";
+import LoggerInterface from "../../../logger/LoggerInterface.ts";
 
 import ObjectToDto from "./ObjectToDto.ts";
 import ToLockableScooterDto from "./ToLockableScooterDto.ts";
@@ -18,6 +19,8 @@ import ToUnknownDto from "./ToUnknownDto.ts";
 export default class _Context {
   private _common: CommonContext | undefined;
   private _objectToDto: ObjectToDto | undefined;
+
+  constructor(private readonly _logger: LoggerInterface) {}
 
   private fromLockableScooterDto(): ToLockableScooterDto {
     return new ToLockableScooterDto(
@@ -54,11 +57,12 @@ export default class _Context {
       const isSpeedometerDto = new IsSpeedometerDto(isNumberStateDto);
 
       this._common = new CommonContext(
+        this._logger,
         new IsStateDto(),
         isStringStateDto,
         new IsConnectionStateDto(isStateDto),
         new IsLockStateDto(isStringStateDto),
-        new IsIotDto(isNetworkDto, isPositionDto),
+        new IsIotDto(this._logger, isNetworkDto, isPositionDto),
         isPositionDto,
         isConnectionModuleDto,
         isNetworkDto,

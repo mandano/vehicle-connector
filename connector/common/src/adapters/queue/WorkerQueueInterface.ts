@@ -4,3 +4,5 @@ export interface WorkerQueueInterface {
   send(message: string): Promise<boolean>;
   consume(onMessage: OnMessageInterface): Promise<void>;
 }
+
+export default WorkerQueueInterface;

@@ -1,5 +1,7 @@
 import { types as modelTypes } from "../../models/types.ts";
 
-export interface UpdateInterface {
-  run(toBeUpdated: modelTypes, updateBy: modelTypes): modelTypes | undefined;
+import UpdateResult from "./UpdateResult.ts";
+
+export default interface UpdateInterface {
+  run(toBeUpdated: modelTypes, updateBy: modelTypes): UpdateResult | undefined;
 }
