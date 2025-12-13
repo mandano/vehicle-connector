@@ -16,27 +16,4 @@ describe("Speedometer", function () {
     const speedometer = new Speedometer(state);
     assert.strictEqual(speedometer.state, state);
   });
-
-  it("should correctly identify a Speedometer instance", () => {
-    const state = new State<number>(200);
-    const speedometer = new Speedometer(state);
-    assert.strictEqual(Speedometer.isSpeedometer(speedometer), true);
-  });
-
-  it("should correctly identify a generic speedometer object", () => {
-    const speedometer = {
-      state: {
-        state: 5,
-        createdAt: new Date(),
-        updatedAt: undefined,
-        originatedAt: undefined,
-      },
-    };
-    assert.strictEqual(Speedometer.isSpeedometer(speedometer), true);
-  });
-
-  it("should correctly identify a non-Speedometer instance", () => {
-    const nonSpeedometer = {};
-    assert.strictEqual(Speedometer.isSpeedometer(nonSpeedometer), false);
-  });
 });

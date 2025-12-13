@@ -1,26 +1,23 @@
-import { Coordinate } from "../vehicles/position/Coordinate.ts";
-import { LoggerInterface } from "../../../connector/common/src/logger/LoggerInterface.ts";
+import LoggerInterface from "common/src/logger/LoggerInterface.ts";
 
-import { Route } from "./Route.ts";
+import Coordinate from "../vehicles/position/Coordinate.ts";
+
+import Route from "./Route.ts";
 
 export class Reservation {
-  private readonly _id: number;
-  private readonly _startTime: Date;
   private _endTime: Date;
-  private readonly _route: Route;
-  private _logger: LoggerInterface;
 
   constructor(
-    id: number,
-    startTime: Date,
-    route: Route,
-    logger: LoggerInterface,
+    private readonly _id: number,
+    private readonly _startTime: Date,
+    private readonly _route: Route,
+    private _logger: LoggerInterface,
   ) {
-    this._id = id;
-    this._startTime = startTime;
-    this._endTime = new Date(this._startTime.getTime() + route.duration);
-    this._route = route;
-    this._logger = logger;
+    this._endTime = new Date(this._startTime.getTime() + this._route.duration);
+  }
+
+  get id(): number {
+    return this._id;
   }
 
   get startTime(): Date {
@@ -67,3 +64,5 @@ export class Reservation {
     return this._route.waypoints[waypointIndex];
   }
 }
+
+export default Reservation;

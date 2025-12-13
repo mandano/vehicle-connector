@@ -1,4 +1,4 @@
-import { Coordinate } from "../vehicles/position/Coordinate.ts";
+import Coordinate from "../vehicles/position/Coordinate.ts";
 
 export class Route {
   private readonly _waypoints: Coordinate[];
@@ -33,3 +33,5 @@ export class Route {
     return this._avgSpeed;
   }
 }
+
+export default Route;

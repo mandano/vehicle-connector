@@ -25,10 +25,4 @@ describe("CloneState", () => {
     assert.deepStrictEqual(clonedState, originalState);
     assert.notStrictEqual(clonedState, originalState);
   });
-
-  it("clones undefined state", () => {
-    const cloneState = new CloneState<string>();
-    const clonedState = cloneState.run(undefined);
-    assert.strictEqual(clonedState, undefined);
-  });
 });

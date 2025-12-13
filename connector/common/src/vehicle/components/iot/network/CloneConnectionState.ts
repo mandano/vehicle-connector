@@ -10,17 +10,9 @@ export default class CloneConnectionState {
   ) {}
 
   public run(
-    connectionState: ConnectionState | undefined,
-  ): ConnectionState | undefined {
-    if (connectionState === undefined) {
-      return undefined;
-    }
-
+    connectionState: ConnectionState,
+  ): ConnectionState {
     const state = this._cloneState.run(connectionState.state);
-
-    if (state === undefined) {
-      return undefined;
-    }
 
     return new ConnectionState(state);
   }

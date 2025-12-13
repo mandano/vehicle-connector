@@ -1,5 +1,7 @@
 import { Batteries } from "../../../../components/energy/Batteries.ts";
 
-export interface UpdateEnergyInterface {
-  run(toBeUpdated: Batteries, updateBy: Batteries): Batteries;
+import UpdateBatteriesResult from "./energy/batteries/UpdateBatteriesResult.ts";
+
+export default interface UpdateEnergyInterface {
+  run(toBeUpdated: Batteries, updateBy: Batteries): UpdateBatteriesResult;
 }

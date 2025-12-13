@@ -67,6 +67,8 @@ export default class VehicleValkeyRepository
   async findByIdDto(id: number): Promise<Hashable<VehicleDto> | undefined> {
     const hashableCandidate = await this._adapter.get(`vehicle:${id}`);
 
+    this._logger.debug(`Retrieved hashableCandidate vehicle id ${id}, ${JSON.stringify(hashableCandidate)}`, VehicleValkeyRepository.name);
+
     if (
       hashableCandidate === undefined ||
       !IsHashable.run(hashableCandidate) ||
@@ -90,6 +92,9 @@ export default class VehicleValkeyRepository
     if (dto === undefined) {
       return undefined;
     }
+
+    this._logger.debug(`dto for vehicle id ${id}, ${JSON.stringify(dto)}`, VehicleValkeyRepository.name);
+
 
     return new Hashable<VehicleDto>(hashableCandidate.hash, dto);
   }

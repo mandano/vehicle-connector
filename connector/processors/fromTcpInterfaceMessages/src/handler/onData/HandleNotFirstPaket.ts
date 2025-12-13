@@ -40,12 +40,21 @@ export class HandleNotFirstPaket implements HandleNotFirstPaketInterface {
 
     if (
       !ContainsIot.run(vehicleStored.model) ||
-      vehicleStored.model.ioT === undefined ||
+      vehicleStored.model.ioT === undefined
+    ) {
+      this._logger.error(
+        `Vehicle with IMEI ${imei} does not contain IoT`,
+        HandleNotFirstPaket.name,
+      );
+      return;
+    }
+
+    if (
       !ContainsNetwork.run(vehicleStored.model.ioT) ||
       vehicleStored.model.ioT.network === undefined
     ) {
       this._logger.error(
-        `Vehicle with IMEI ${imei} does not contain IoT`,
+        `IoT with IMEI ${imei} does not contain Network`,
         HandleNotFirstPaket.name,
       );
       return;

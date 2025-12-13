@@ -10,6 +10,7 @@ import IsConnectionModuleDto from "../../../components/iot/network/IsConnectionM
 import IsNetworkDto from "../../../components/iot/network/IsNetworkDto.ts";
 import IsOdometerDto from "../../../components/odometer/IsOdometerDto.ts";
 import IsSpeedometerDto from "../../../components/speedometer/IsSpeedometerDto.ts";
+import LoggerInterface from "../../../../logger/LoggerInterface.ts";
 
 import BatteriesBuilder from "./BatteriesBuilder.ts";
 import ConnectionModuleBuilder from "./ConnectionModuleBuilder.ts";
@@ -33,6 +34,7 @@ export default class Context {
   private _speedometerBuilder: SpeedometerBuilder | undefined;
 
   constructor(
+    private readonly _logger: LoggerInterface,
     private readonly _isStateDto: IsStateDto,
     private readonly _isStringStateDto: IsStringStateDto,
     private readonly _isConnectionStateDto: IsConnectionStateDto,
@@ -80,6 +82,7 @@ export default class Context {
   public iotBuilder(): IotBuilder {
     if (!this._iotBuilder) {
       this._iotBuilder = new IotBuilder(
+        this._logger,
         this.networkBuilder(),
         this.positionBuilder(),
         this._isIotDto,

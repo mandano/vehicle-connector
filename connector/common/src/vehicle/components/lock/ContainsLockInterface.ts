@@ -1,5 +1,5 @@
 import { Lock } from "./Lock.ts";
 
 export interface ContainsLockInterface {
-  get lock(): Lock;
+  get lock(): Lock | undefined;
 }

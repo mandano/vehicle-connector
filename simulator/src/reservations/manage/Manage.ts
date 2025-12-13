@@ -1,6 +1,7 @@
 import SimulatedVehicle from "../../vehicles/SimulatedVehicle.ts";
 import LoggerInterface from "../../../../connector/common/src/logger/LoggerInterface.ts";
 import ContainsIot from "../../../../connector/common/src/vehicle/components/iot/ContainsIot.ts";
+import Reservation from "../Reservation.ts";
 
 import ScenarioInterface from "./ScenarioInterface.ts";
 import Add from "./Add.ts";
@@ -45,6 +46,16 @@ export default class Manage {
   }
 
   private findVehiclesWithReservation(): SimulatedVehicle[] {
+    return this._vehicles.filter((vehicle) => vehicle.reservation);
+  }
+
+  public findRunningReservation(): Reservation[] {
+    return this._vehicles
+      .filter((vehicle) => vehicle.reservation)
+      .map((vehicle) => vehicle.reservation!);
+  }
+
+  public findVehiclesWithRunningReservation(): SimulatedVehicle[] {
     return this._vehicles.filter((vehicle) => vehicle.reservation);
   }
 

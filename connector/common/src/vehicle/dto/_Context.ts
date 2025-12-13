@@ -1,4 +1,5 @@
 import SendActionRequestInterface from "../model/actions/SendActionRequestInterface.ts";
+import LoggerInterface from "../../logger/LoggerInterface.ts";
 
 import VehicleToObjectContext from "./vehicleToObject/VehicleToObject.ts";
 import VehicleToDtoContext from "./vehicleToDto/_Context.ts";
@@ -15,6 +16,7 @@ export default class Context {
 
   constructor(
     private readonly _sendActionRequest: SendActionRequestInterface,
+    private readonly _logger: LoggerInterface,
   ) {}
 
   public dtoToObject(): DtoToObject {
@@ -43,7 +45,7 @@ export default class Context {
 
   public objectToDto(): ObjectToDtoContext {
     if (!this._objectToDtoContext) {
-      this._objectToDtoContext = new ObjectToDtoContext();
+      this._objectToDtoContext = new ObjectToDtoContext(this._logger);
     }
     return this._objectToDtoContext;
   }

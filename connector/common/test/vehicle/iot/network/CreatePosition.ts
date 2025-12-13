@@ -8,24 +8,25 @@ export class CreatePosition {
     latitude?: number;
     longitude?: number;
     accuracy?: number;
+    originatedAt?: Date;
   }): Position {
     return new Position(
       new State(
         options?.latitude ?? faker.location.latitude(),
-        new Date(),
+        options?.originatedAt ?? new Date(),
         new Date(),
         new Date(),
       ),
       new State(
         options?.longitude ?? faker.location.longitude(),
-        new Date(),
+        options?.originatedAt ?? new Date(),
         new Date(),
         new Date(),
       ),
       new Date(),
       new State(
         options?.accuracy ?? faker.number.int({ min: 1, max: 5 }),
-        new Date(),
+        options?.originatedAt ?? new Date(),
         new Date(),
         new Date(),
       ),

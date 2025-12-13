@@ -31,6 +31,7 @@
 - [ ] polish connector codebase
 - [ ] polish simulator codebase
 - [ ] handle redis disconnect correctly
+- [ ] add endpoint to get server time (detect time skews)
 
 ## In Progress
 - [ ] replace tmp file based vehicle repository by valkey based repository

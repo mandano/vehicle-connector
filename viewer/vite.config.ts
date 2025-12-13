@@ -5,11 +5,16 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': {
+      '/userapi': {
         target: 'http://localhost:3000',
         changeOrigin: true,
-        secure: false,
+        rewrite: (path) => path.replace(/^\/userapi/, '/api'),
       },
-    },
+      '/simulator': {
+        target: 'http://localhost:3003',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/simulator/, '/api'),
+      }
+    }
   },
 });
